@@ -33,6 +33,7 @@ class ObdCaptureService : Service() {
         @Volatile var remainingSeconds = 0L
         @Volatile var currentTotalRows = 0
         @Volatile var liveSnapshotJson = "{}"
+        @Volatile var hvBmsJson = ""
 
         suspend fun sendLiveCommand(cmd: String): String {
             val inst = activeInstance ?: return "NOT CONNECTED"
@@ -146,6 +147,17 @@ class ObdCaptureService : Service() {
 
             db.upsertSession(sessionId, vehicleName, detectedVin, 0, dtcList.size)
 
+            // Initial Hyundai Hybrid HV Battery BMS snapshot (7E4 -> 220101)
+            if (detectedVin.startsWith("KMH")) {
+                ble.sendCommand("ATSH7E4", 1000)
+                ble.sendCommand("ATCRA7EC", 1000)
+                val bmsRaw = ble.sendCommand("220101", 2500)
+                ble.sendCommand("ATSH7DF", 1000)
+                ble.sendCommand("ATCRA", 1000)
+                rawReplies.put("7E4_220101", bmsRaw)
+                ObdDecoders.decodeHyundaiHvBms(bmsRaw)?.let { hvBmsJson = it.toString() }
+            }
+
             val endAtMs = System.currentTimeMillis() + durationMin * 60_000L
             var lastFlushMs = System.currentTimeMillis()
             var cycle = 0
@@ -168,6 +180,14 @@ class ObdCaptureService : Service() {
                 val thr = ObdDecoders.decodeThrottlePct(ble.sendCommand("0111", 1500))
                 val maf = if ((rpm ?: 0.0) > 400.0) ObdDecoders.decodeMafGs(ble.sendCommand("0110", 1500)) else null
 
+                if (cycle > 0 && cycle % 25 == 0 && detectedVin.startsWith("KMH")) {
+                    ble.sendCommand("ATSH7E4", 800)
+                    ble.sendCommand("ATCRA7EC", 800)
+                    val bmsRaw = ble.sendCommand("220101", 2000)
+                    ble.sendCommand("ATSH7DF", 800)
+                    ble.sendCommand("ATCRA", 800)
+                    ObdDecoders.decodeHyundaiHvBms(bmsRaw)?.let { hvBmsJson = it.toString() }
+                }
                 if (cycle % 5 == 0) {
                     lastCoolant = ObdDecoders.decodeCoolantF(ble.sendCommand("0105", 1500)) ?: lastCoolant
                     lastIntake = ObdDecoders.decodeIntakeF(ble.sendCommand("010F", 1500)) ?: lastIntake
@@ -227,6 +247,9 @@ class ObdCaptureService : Service() {
         } finally {
             ble.disconnect()
             isBleConnected = false
+            currentVin = ""
+            currentVehicle = ""
+            hvBmsJson = ""
             releaseWakeLock()
             isRunning = false
             stopForeground(STOP_FOREGROUND_DETACH)
