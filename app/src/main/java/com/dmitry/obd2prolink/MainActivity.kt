@@ -1,31 +1,37 @@
 package com.dmitry.obd2prolink
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-import android.widget.*
+import android.webkit.JavascriptInterface
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import kotlinx.coroutines.*
+import org.json.JSONArray
+import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
     private val uiScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private lateinit var db: ObdLocalDb
+    private lateinit var webView: WebView
 
-    private lateinit var txtServiceStatus: TextView
-    private lateinit var txtLiveStats: TextView
-    private lateinit var txtDriveHealth: TextView
-    private lateinit var txtSessions: TextView
-    private lateinit var switchAutoStart: Switch
-    private lateinit var edtDuration: EditText
-    private lateinit var edtKeywords: EditText
-    private lateinit var edtDriveUrl: EditText
+    @Volatile private var lastDriveHealthOk = false
+    @Volatile private var lastDriveHealthDetail = "Checking..."
 
     private val permLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -34,66 +40,35 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "Granted $granted/${results.size} permissions", Toast.LENGTH_SHORT).show()
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         db = ObdLocalDb(this)
 
-        txtServiceStatus = findViewById(R.id.txtServiceStatus)
-        txtLiveStats = findViewById(R.id.txtLiveStats)
-        txtDriveHealth = findViewById(R.id.txtDriveHealth)
-        txtSessions = findViewById(R.id.txtSessions)
-        switchAutoStart = findViewById(R.id.switchAutoStart)
-        edtDuration = findViewById(R.id.edtDurationMinutes)
-        edtKeywords = findViewById(R.id.edtCarKeywords)
-        edtDriveUrl = findViewById(R.id.edtDriveUrl)
-
-        // Load saved preferences
-        switchAutoStart.isChecked = AppConfig.isAutoStartEnabled(this)
-        edtDuration.setText(AppConfig.getDurationMinutes(this).toString())
-        edtKeywords.setText(AppConfig.getCarKeywords(this).joinToString(","))
-        edtDriveUrl.setText(AppConfig.getDriveUrl(this))
-
-        findViewById<Button>(R.id.btnStartCapture).setOnClickListener {
-            requestRequiredPermissions()
-            val intent = Intent(this, ObdCaptureService::class.java).apply {
-                action = ObdCaptureService.ACTION_START
-                putExtra("trigger_device", "Manual")
-            }
-            ContextCompat.startForegroundService(this, intent)
-            Toast.makeText(this, "Starting background capture...", Toast.LENGTH_SHORT).show()
+        // Fix Android 15 / Galaxy S25 edge-to-edge status & navigation bar padding
+        val root = findViewById<FrameLayout>(R.id.rootContainer)
+        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+            insets
         }
 
-        findViewById<Button>(R.id.btnStopCapture).setOnClickListener {
-            val intent = Intent(this, ObdCaptureService::class.java).apply {
-                action = ObdCaptureService.ACTION_STOP
-            }
-            startService(intent)
+        webView = findViewById(R.id.webView)
+        webView.setBackgroundColor(Color.parseColor("#0A0F1D"))
+        webView.webViewClient = WebViewClient()
+        webView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            databaseEnabled = true
+            allowFileAccess = true
+            cacheMode = WebSettings.LOAD_DEFAULT
+            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
         }
-
-        findViewById<Button>(R.id.btnSaveSettings).setOnClickListener {
-            AppConfig.setAutoStartEnabled(this, switchAutoStart.isChecked)
-            AppConfig.setDurationMinutes(this, edtDuration.text.toString().toIntOrNull() ?: 20)
-            AppConfig.setCarKeywords(this, edtKeywords.text.toString())
-            AppConfig.setDriveUrl(this, edtDriveUrl.text.toString())
-            Toast.makeText(this, "Settings saved.", Toast.LENGTH_SHORT).show()
-            checkDriveHealthAndFlush()
-        }
-
-        findViewById<Button>(R.id.btnFlushQueue).setOnClickListener {
-            checkDriveHealthAndFlush()
-        }
-
-        findViewById<Button>(R.id.btnPermissions).setOnClickListener {
-            requestRequiredPermissions()
-        }
-
-        findViewById<Button>(R.id.btnBatteryUnrestricted).setOnClickListener {
-            openBatteryUnrestrictedSettings()
-        }
+        webView.addJavascriptInterface(AndroidObdBridge(), "AndroidObd")
+        webView.loadUrl("file:///android_asset/index.html")
 
         checkDriveHealthAndFlush()
-        startUiRefreshTicker()
     }
 
     private fun requestRequiredPermissions() {
@@ -118,51 +93,122 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
             }
         } else {
-            Toast.makeText(this, "Battery is already Unrestricted for OBD2 Pro Link!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Battery is already Unrestricted!", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun checkDriveHealthAndFlush() {
         uiScope.launch {
-            txtDriveHealth.text = "Drive Sync: Checking endpoint..."
             val health = DriveSyncManager.checkHealth(this@MainActivity)
+            lastDriveHealthOk = health.ok
+            lastDriveHealthDetail = health.detail
             if (health.ok) {
-                val (flushed, _) = DriveSyncManager.flushQueue(this@MainActivity, db)
-                val (remBatches, remRows) = db.countPendingBatches()
-                txtDriveHealth.text = "Drive Sync: ${health.detail} | Flushed: $flushed | Queued: $remBatches ($remRows rows)"
-            } else {
-                val (remBatches, remRows) = db.countPendingBatches()
-                txtDriveHealth.text = "Drive Sync: ${health.detail} | Buffered locally: $remBatches ($remRows rows)"
-            }
-            refreshSessionsList()
-        }
-    }
-
-    private fun startUiRefreshTicker() {
-        uiScope.launch {
-            while (isActive) {
-                txtServiceStatus.text = "Status: ${ObdCaptureService.statusText}"
-                txtLiveStats.text = ObdCaptureService.liveSummary
-                refreshSessionsList()
-                delay(1500)
+                DriveSyncManager.flushQueue(this@MainActivity, db)
             }
         }
     }
 
-    private fun refreshSessionsList() {
-        val sessions = db.getRecentSessions(8)
-        val (qB, qR) = db.countPendingBatches()
-        if (sessions.isEmpty()) {
-            txtSessions.text = "No captured sessions yet. Local buffer: $qB batches ($qR rows)."
-            return
+    inner class AndroidObdBridge {
+        @JavascriptInterface
+        fun isNative(): Boolean = true
+
+        @JavascriptInterface
+        fun startCapture() {
+            runOnUiThread {
+                requestRequiredPermissions()
+                val intent = Intent(this@MainActivity, ObdCaptureService::class.java).apply {
+                    action = ObdCaptureService.ACTION_START
+                    putExtra("trigger_device", "Manual")
+                }
+                ContextCompat.startForegroundService(this@MainActivity, intent)
+            }
         }
-        val sb = StringBuilder()
-        if (qB > 0) sb.append("Pending offline upload: $qB batch(es) ($qR rows)\n\n")
-        sessions.forEach { s ->
-            sb.append("${s.sessionId} • ${s.vehicleName}\n")
-            sb.append("  VIN: ${s.vin.ifEmpty { "--" }} | Rows: ${s.rowCount} (Synced: ${s.syncedRows}) | DTCs: ${s.dtcCount}\n")
+
+        @JavascriptInterface
+        fun stopCapture() {
+            runOnUiThread {
+                val intent = Intent(this@MainActivity, ObdCaptureService::class.java).apply {
+                    action = ObdCaptureService.ACTION_STOP
+                }
+                startService(intent)
+            }
         }
-        txtSessions.text = sb.toString().trim()
+
+        @JavascriptInterface
+        fun requestPermissions() {
+            runOnUiThread { requestRequiredPermissions() }
+        }
+
+        @JavascriptInterface
+        fun openBatteryUnrestricted() {
+            runOnUiThread { openBatteryUnrestrictedSettings() }
+        }
+
+        @JavascriptInterface
+        fun flushNow() {
+            checkDriveHealthAndFlush()
+        }
+
+        @JavascriptInterface
+        fun saveNativeSettings(autoStart: Boolean, durationMin: Int, keywords: String, driveUrl: String) {
+            AppConfig.setAutoStartEnabled(this@MainActivity, autoStart)
+            AppConfig.setDurationMinutes(this@MainActivity, durationMin)
+            AppConfig.setCarKeywords(this@MainActivity, keywords)
+            AppConfig.setDriveUrl(this@MainActivity, driveUrl)
+            checkDriveHealthAndFlush()
+        }
+
+        @JavascriptInterface
+        fun sendCommand(cmd: String, callbackId: String) {
+            uiScope.launch(Dispatchers.IO) {
+                val reply = ObdCaptureService.sendLiveCommand(cmd)
+                val safeReply = JSONObject.quote(reply)
+                val safeId = JSONObject.quote(callbackId)
+                withContext(Dispatchers.Main) {
+                    webView.evaluateJavascript("window.__onAndroidCmdReply($safeId, $safeReply);", null)
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun getStateJson(): String {
+            val (qBatches, qRows) = db.countPendingBatches()
+            val sessionsArr = JSONArray()
+            db.getRecentSessions(8).forEach { s ->
+                sessionsArr.put(JSONObject().apply {
+                    put("sessionId", s.sessionId)
+                    put("vehicleName", s.vehicleName)
+                    put("vin", s.vin)
+                    put("rowCount", s.rowCount)
+                    put("syncedRows", s.syncedRows)
+                    put("dtcCount", s.dtcCount)
+                })
+            }
+            val liveObj = runCatching { JSONObject(ObdCaptureService.liveSnapshotJson) }.getOrElse { JSONObject() }
+            return JSONObject().apply {
+                put("running", ObdCaptureService.isRunning)
+                put("connected", ObdCaptureService.isBleConnected)
+                put("statusText", ObdCaptureService.statusText)
+                put("vehicleName", ObdCaptureService.currentVehicle)
+                put("vin", ObdCaptureService.currentVin)
+                put("remainingSec", ObdCaptureService.remainingSeconds)
+                put("totalRows", ObdCaptureService.currentTotalRows)
+                put("live", liveObj)
+                put("bufferedBatches", qBatches)
+                put("bufferedRows", qRows)
+                put("driveHealth", JSONObject().apply {
+                    put("ok", lastDriveHealthOk)
+                    put("detail", lastDriveHealthDetail)
+                })
+                put("sessions", sessionsArr)
+                put("settings", JSONObject().apply {
+                    put("autoStart", AppConfig.isAutoStartEnabled(this@MainActivity))
+                    put("durationMin", AppConfig.getDurationMinutes(this@MainActivity))
+                    put("keywords", AppConfig.getCarKeywords(this@MainActivity).joinToString(","))
+                    put("driveUrl", AppConfig.getDriveUrl(this@MainActivity))
+                })
+            }.toString()
+        }
     }
 
     override fun onDestroy() {

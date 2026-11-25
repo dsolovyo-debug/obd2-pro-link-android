@@ -23,20 +23,33 @@ class ObdCaptureService : Service() {
         const val CHANNEL_ID = "obd2_capture_channel"
         const val NOTIF_ID = 4201
 
+        @Volatile var activeInstance: ObdCaptureService? = null
         @Volatile var isRunning = false
+        @Volatile var isBleConnected = false
         @Volatile var statusText = "Standby (Waiting for Car Bluetooth)"
-        @Volatile var liveSummary = "Vehicle: -- | RPM: -- | Speed: -- | Bat: --"
         @Volatile var currentSessionId = ""
+        @Volatile var currentVehicle = "Fleet Vehicle"
+        @Volatile var currentVin = ""
+        @Volatile var remainingSeconds = 0L
+        @Volatile var currentTotalRows = 0
+        @Volatile var liveSnapshotJson = "{}"
+
+        suspend fun sendLiveCommand(cmd: String): String {
+            val inst = activeInstance ?: return "NOT CONNECTED"
+            if (!inst.ble.isConnected) return "NOT CONNECTED"
+            return inst.ble.sendCommand(cmd, 2500L)
+        }
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var captureJob: Job? = null
     private var wakeLock: PowerManager.WakeLock? = null
     private lateinit var db: ObdLocalDb
-    private lateinit var ble: VgateBleClient
+    internal lateinit var ble: VgateBleClient
 
     override fun onCreate() {
         super.onCreate()
+        activeInstance = this
         db = ObdLocalDb(this)
         ble = VgateBleClient(this)
         createNotificationChannel()
@@ -50,7 +63,10 @@ class ObdCaptureService : Service() {
         if (isRunning) return START_STICKY
 
         isRunning = true
+        isBleConnected = false
+        currentTotalRows = 0
         val durationMin = AppConfig.getDurationMinutes(this)
+        remainingSeconds = durationMin * 60L
         val triggerName = intent?.getStringExtra("trigger_device") ?: "Manual"
         startForegroundCompat("Connecting to IOS-Vlink ($triggerName)...")
 
@@ -78,7 +94,6 @@ class ObdCaptureService : Service() {
 
         try {
             updateStatus("Scanning for IOS-Vlink ($triggerName)...")
-            // Give the car 4 seconds after Bluetooth audio connects for OBD port power-up
             if (triggerName != "Manual") delay(4000)
 
             var connected = false
@@ -96,6 +111,7 @@ class ObdCaptureService : Service() {
                 updateStatus("IOS-Vlink not found (car off or out of range)")
                 return
             }
+            isBleConnected = true
 
             updateStatus("Initializing ELM327 on CAN 500k...")
             if (!ble.initElm327()) {
@@ -107,9 +123,11 @@ class ObdCaptureService : Service() {
             val vinRaw = ble.sendCommand("0902", 3000)
             detectedVin = ObdDecoders.decodeVin(vinRaw).orEmpty()
             vehicleName = AppConfig.identifyFleetVehicle(detectedVin)
+            currentVin = detectedVin
+            currentVehicle = vehicleName
             rawReplies.put("0902", vinRaw)
 
-            // Initial DTC sweep (Stored 03, Pending 07, Permanent 0A)
+            // Initial DTC sweep
             val d03 = ble.sendCommand("03", 2500)
             val d07 = ble.sendCommand("07", 2500)
             val d0a = ble.sendCommand("0A", 2500)
@@ -140,6 +158,7 @@ class ObdCaptureService : Service() {
             while (currentCoroutineContext().isActive && ble.isConnected && System.currentTimeMillis() < endAtMs) {
                 val now = System.currentTimeMillis()
                 val remSec = ((endAtMs - now) / 1000L).coerceAtLeast(0L)
+                remainingSeconds = remSec
                 val remMin = remSec / 60
                 val remS = remSec % 60
 
@@ -168,23 +187,20 @@ class ObdCaptureService : Service() {
                     if (load != null) put("load", Math.round(load * 10.0) / 10.0)
                     if (thr != null) put("throttle", Math.round(thr * 10.0) / 10.0)
                     if (maf != null) put("maf", Math.round(maf * 100.0) / 100.0)
-                    if (lastCoolant != null) put("coolantF", Math.round(lastCoolant!! * 10.0) / 10.0)
-                    if (lastIntake != null) put("intakeF", Math.round(lastIntake!! * 10.0) / 10.0)
-                    if (lastStft != null) put("stft", Math.round(lastStft!! * 10.0) / 10.0)
-                    if (lastLtft != null) put("ltft", Math.round(lastLtft!! * 10.0) / 10.0)
-                    if (lastVolt != null) put("volts", Math.round(lastVolt!! * 100.0) / 100.0)
+                    lastCoolant?.let { put("coolantF", Math.round(it * 10.0) / 10.0) }
+                    lastIntake?.let { put("intakeF", Math.round(it * 10.0) / 10.0) }
+                    lastStft?.let { put("stft", Math.round(it * 10.0) / 10.0) }
+                    lastLtft?.let { put("ltft", Math.round(it * 10.0) / 10.0) }
+                    lastVolt?.let { put("volts", Math.round(it * 100.0) / 100.0) }
                 }
+                liveSnapshotJson = row.toString()
                 pendingRows.add(row)
                 totalRows++
+                currentTotalRows = totalRows
                 cycle++
 
-                val rpmTxt = rpm?.toInt()?.toString() ?: "--"
-                val spdTxt = spd?.toInt()?.toString() ?: "--"
-                val vTxt = lastVolt?.let { String.format(Locale.US, "%.1fV", it) } ?: "--"
-                liveSummary = "$vehicleName | ${rpmTxt} RPM | ${spdTxt} mph | $vTxt | Rows: $totalRows"
                 updateStatus(String.format(Locale.US, "Recording %s (%02d:%02d left) • %d rows", vehicleName, remMin, remS, totalRows))
 
-                // Flush to SQLite + Drive every 10 seconds
                 if (System.currentTimeMillis() - lastFlushMs >= 10_000L && pendingRows.isNotEmpty()) {
                     persistAndSyncBatch(
                         sessionId, vehicleName, detectedVin, triggerName,
@@ -197,7 +213,6 @@ class ObdCaptureService : Service() {
                 }
             }
 
-            // Final flush before auto-disconnect
             if (pendingRows.isNotEmpty() || !metaSent) {
                 persistAndSyncBatch(
                     sessionId, vehicleName, detectedVin, triggerName,
@@ -211,6 +226,7 @@ class ObdCaptureService : Service() {
             updateStatus("Completed $vehicleName ($totalRows rows) — auto-disconnected")
         } finally {
             ble.disconnect()
+            isBleConnected = false
             releaseWakeLock()
             isRunning = false
             stopForeground(STOP_FOREGROUND_DETACH)
@@ -254,6 +270,7 @@ class ObdCaptureService : Service() {
         updateStatus(reason)
         captureJob?.cancel()
         ble.disconnect()
+        isBleConnected = false
         releaseWakeLock()
         isRunning = false
         stopForeground(STOP_FOREGROUND_REMOVE)
@@ -318,9 +335,11 @@ class ObdCaptureService : Service() {
     }
 
     override fun onDestroy() {
+        if (activeInstance == this) activeInstance = null
         captureJob?.cancel()
         scope.cancel()
         ble.disconnect()
+        isBleConnected = false
         releaseWakeLock()
         isRunning = false
         super.onDestroy()
