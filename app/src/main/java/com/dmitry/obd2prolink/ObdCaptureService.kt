@@ -83,7 +83,7 @@ class ObdCaptureService : Service() {
 
             var connected = false
             for (attempt in 1..3) {
-                if (!isActive) break
+                if (!currentCoroutineContext().isActive) break
                 updateStatus("Connecting to IOS-Vlink (attempt $attempt/3)...")
                 if (ble.scanAndConnect(12000L)) {
                     connected = true
@@ -137,7 +137,7 @@ class ObdCaptureService : Service() {
             var lastLtft: Double? = null
             var lastVolt: Double? = null
 
-            while (isActive && ble.isConnected && System.currentTimeMillis() < endAtMs) {
+            while (currentCoroutineContext().isActive && ble.isConnected && System.currentTimeMillis() < endAtMs) {
                 val now = System.currentTimeMillis()
                 val remSec = ((endAtMs - now) / 1000L).coerceAtLeast(0L)
                 val remMin = remSec / 60
