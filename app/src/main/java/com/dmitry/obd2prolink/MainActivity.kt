@@ -11,6 +11,8 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.webkit.JavascriptInterface
 import android.webkit.WebSettings
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
@@ -56,7 +58,19 @@ class MainActivity : AppCompatActivity() {
 
         webView = findViewById(R.id.webView)
         webView.setBackgroundColor(Color.parseColor("#0A0F1D"))
-        webView.webViewClient = WebViewClient()
+        val liveUrl = "https://dsolovyo-debug.github.io/obd2-pro-link/?t=" + (System.currentTimeMillis() / 60000L)
+        val offlineFallbackUrl = "file:///android_asset/index.html"
+        webView.webViewClient = object : WebViewClient() {
+            override fun onReceivedError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                error: WebResourceError?
+            ) {
+                if (request?.isForMainFrame == true && request.url.toString().startsWith("https://")) {
+                    view?.loadUrl(offlineFallbackUrl)
+                }
+            }
+        }
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
@@ -66,7 +80,7 @@ class MainActivity : AppCompatActivity() {
             mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
         }
         webView.addJavascriptInterface(AndroidObdBridge(), "AndroidObd")
-        webView.loadUrl("file:///android_asset/index.html")
+        webView.loadUrl(liveUrl)
 
         checkDriveHealthAndFlush()
     }
