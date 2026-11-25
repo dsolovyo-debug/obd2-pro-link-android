@@ -1,0 +1,47 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Build Debug APK (ready to install on Galaxy S25)
+        run: gradle assembleDebug --no-daemon
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: obd2-pro-link-android-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish to GitHub Release (latest)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: OBD2 Pro Link Android (Latest APK)
+          body: |
+            Automated cloud build of **OBD2 Pro Link** for Samsung Galaxy S25 (Android 15).
+            Download `app-debug.apk` on your phone to install or update.
+          files: app/build/outputs/apk/debug/app-debug.apk
+          make_latest: true

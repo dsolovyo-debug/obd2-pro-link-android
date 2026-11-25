@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.OBD2ProLink" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#06B6D4</item>
+        <item name="colorOnPrimary">#06121C</item>
+        <item name="colorSecondary">#10B981</item>
+        <item name="android:windowBackground">#0A0F1D</item>
+        <item name="android:statusBarColor">#0A0F1D</item>
+        <item name="android:navigationBarColor">#0A0F1D</item>
+    </style>
+</resources>
