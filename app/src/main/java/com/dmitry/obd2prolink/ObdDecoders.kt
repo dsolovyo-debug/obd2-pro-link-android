@@ -1,9 +1,24 @@
 package com.dmitry.obd2prolink
 
+import org.json.JSONObject
+
 object ObdDecoders {
 
     fun cleanHex(raw: String): String =
         raw.uppercase().replace(Regex("[^0-9A-F]"), "")
+
+    fun reassembleIsoTpHex(raw: String): String {
+        val up = raw.uppercase()
+        if (Regex("\\b0:").containsMatchIn(up)) {
+            val parts = Regex("[0-9A-F]:([0-9A-F]+)").findAll(up).map { it.groupValues[1] }.toList()
+            if (parts.isNotEmpty()) return parts.joinToString("")
+        }
+        val tokens = up.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        if (tokens.isNotEmpty() && tokens.all { Regex("^7[0-9A-F]{2}[12][0-9A-F]").containsMatchIn(it) }) {
+            return tokens.joinToString("") { t -> if (t[3] == '1') t.substring(7) else t.substring(5) }
+        }
+        return cleanHex(up)
+    }
 
     fun findPidBytes(raw: String, modeHex: String, pidHex: String, needed: Int): List<Int>? {
         val hex = cleanHex(raw)
@@ -50,7 +65,7 @@ object ObdDecoders {
     }
 
     fun decodeVin(raw: String): String? {
-        val hex = cleanHex(raw)
+        val hex = reassembleIsoTpHex(raw)
         val idx = hex.indexOf("490201")
         if (idx < 0) return null
         val payload = hex.substring(idx + 6)
@@ -68,23 +83,61 @@ object ObdDecoders {
     }
 
     fun decodeDtcs(raw: String, modeReplyHex: String): List<String> {
-        val hex = cleanHex(raw)
-        val idx = hex.indexOf(modeReplyHex.uppercase())
-        if (idx < 0) return emptyList()
-        val data = hex.substring(idx + modeReplyHex.length)
+        if (raw.isBlank() || raw.contains("NO DATA", ignoreCase = true)) return emptyList()
+        val prefix = modeReplyHex.uppercase()
         val out = mutableListOf<String>()
         val prefixes = charArrayOf('P', 'C', 'B', 'U')
-        var i = 0
-        while (i + 4 <= data.length) {
-            val chunk = data.substring(i, i + 4)
-            i += 4
-            if (chunk == "0000") continue
-            val first = chunk.substring(0, 1).toIntOrNull(16) ?: continue
-            val letter = prefixes[(first shr 2) and 0x03]
-            val d1 = first and 0x03
-            val code = "$letter$d1${chunk.substring(1)}"
-            if (!out.contains(code)) out.add(code)
+        val frames = raw.uppercase().split(Regex("[\\r\\n\\s]+")).filter { it.isNotEmpty() }
+        for (frame in frames) {
+            val clean = cleanHex(frame)
+            val idx = clean.indexOf(prefix)
+            if (idx < 0) continue
+            val payload = clean.substring(idx + prefix.length)
+            if (payload.length < 2) continue
+            val count = payload.substring(0, 2).toIntOrNull(16) ?: 0
+            if (count == 0) continue
+            val data = payload.substring(2)
+            var i = 0
+            while (i + 4 <= data.length) {
+                val chunk = data.substring(i, i + 4)
+                i += 4
+                if (chunk == "0000") continue
+                val first = chunk.substring(0, 1).toIntOrNull(16) ?: continue
+                val letter = prefixes[(first shr 2) and 0x03]
+                val d1 = first and 0x03
+                val code = "$letter$d1${chunk.substring(1)}"
+                if (!out.contains(code)) out.add(code)
+            }
         }
         return out
+    }
+
+    fun decodeHyundaiHvBms(raw: String): JSONObject? {
+        val hex = reassembleIsoTpHex(raw)
+        val idx = hex.indexOf("620101")
+        if (idx < 0) return null
+        val p = hex.substring(idx + 6)
+        if (p.length < 54) return null
+        val b = IntArray(p.length / 2) { i -> p.substring(i * 2, i * 2 + 2).toInt(16) }
+        if (b.size < 27) return null
+        val socPct = b[4] / 2.0
+        var rawCurr = (b[10] shl 8) or b[11]
+        if (rawCurr >= 32768) rawCurr -= 65536
+        val currentA = rawCurr / 10.0
+        val packV = ((b[12] shl 8) or b[13]) / 10.0
+        val tMaxC = if (b[14] < 128) b[14] else b[14] - 256
+        val tMinC = if (b[15] < 128) b[15] else b[15] - 256
+        val cellMaxV = b[23] * 0.02
+        val cellMinV = b[25] * 0.02
+        return JSONObject().apply {
+            put("socPct", Math.round(socPct * 10.0) / 10.0)
+            put("packV", Math.round(packV * 10.0) / 10.0)
+            put("currentA", Math.round(currentA * 10.0) / 10.0)
+            put("cellMaxV", Math.round(cellMaxV * 100.0) / 100.0)
+            put("cellMinV", Math.round(cellMinV * 100.0) / 100.0)
+            put("cellDeltaMv", Math.round((cellMaxV - cellMinV) * 1000.0))
+            put("tempMaxC", tMaxC)
+            put("tempMinC", tMinC)
+        }
     }
 }
