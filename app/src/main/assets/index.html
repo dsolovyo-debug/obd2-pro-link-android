@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#080c15" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
-  <title>OBD2 Pro Link v2.1 — Pro Fleet Diagnostics</title>
+  <title>OBD2 Pro Link v2.2 — Pro Fleet Diagnostics</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -78,7 +78,7 @@
               <span id="driveSyncText">Drive: Auto</span>
             </span>
           </div>
-          <p id="activeVehicleLabel" class="text-[11px] text-slate-400 truncate">2024 Hyundai Elantra Hybrid Limited</p>
+          <p id="activeVehicleLabel" class="text-[11px] text-slate-400 truncate">Not Connected — Auto-VIN Ready</p>
         </div>
       </div>
 
@@ -148,6 +148,35 @@
 
     <!-- ==================== VIEW 1: HOME / HEALTH DASHBOARD ==================== -->
     <section id="view-home" class="view-panel space-y-4">
+      <!-- Live Hybrid HV Battery BMS Card (auto-revealed on Hybrid vehicles) -->
+      <div id="hvBmsCard" class="hidden rounded-2xl bg-[#111827] border border-emerald-500/30 p-4 space-y-2.5">
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-emerald-400">HV Battery BMS (7E4 • 220101)</div>
+            <div id="hvBmsSummary" class="text-sm font-bold text-white mt-0.5">Waiting for HV pack data...</div>
+          </div>
+          <span id="hvBmsSocBadge" class="px-2.5 py-1 rounded-full text-xs font-bold font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">--%</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+          <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-2.5">
+            <div class="text-[10px] text-slate-400">PACK VOLTAGE</div>
+            <div id="hvPackV" class="text-sm font-bold text-white mt-0.5">-- V</div>
+          </div>
+          <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-2.5">
+            <div class="text-[10px] text-slate-400">PACK CURRENT</div>
+            <div id="hvPackA" class="text-sm font-bold text-cyan-300 mt-0.5">-- A</div>
+          </div>
+          <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-2.5">
+            <div class="text-[10px] text-slate-400">CELL MAX / MIN</div>
+            <div id="hvCellRange" class="text-sm font-bold text-emerald-300 mt-0.5">-- / -- V</div>
+          </div>
+          <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-2.5">
+            <div class="text-[10px] text-slate-400">MODULE TEMP</div>
+            <div id="hvPackTemp" class="text-sm font-bold text-amber-300 mt-0.5">-- °F</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Auto-VIN & Battery Health Row -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <!-- Auto-VIN & Vehicle Card -->
@@ -155,8 +184,8 @@
           <div class="flex items-start justify-between gap-2">
             <div>
               <div class="text-[11px] uppercase tracking-wider font-semibold text-cyan-400">Auto-VIN &amp; Active Profile</div>
-              <div id="homeVehicleName" class="text-base font-bold text-white mt-0.5">2024 Hyundai Elantra Hybrid Limited</div>
-              <div id="homeVinDisplay" class="text-xs font-mono text-slate-400 mt-0.5">VIN: Connect to auto-read (Mode 09 02)</div>
+              <div id="homeVehicleName" class="text-base font-bold text-white mt-0.5">No Vehicle Connected</div>
+              <div id="homeVinDisplay" class="text-xs font-mono text-slate-400 mt-0.5">Connect IOS-Vlink to auto-identify vehicle</div>
             </div>
             <button id="homePrintReportBtn" type="button" class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
               <i data-lucide="printer" class="w-3.5 h-3.5"></i><span>Health Report</span>
@@ -809,23 +838,74 @@
       { id: 'custom', name: 'Custom Vehicle Profile', weight: 3500, loss: 15, redline: 6500, disp: 2.0, fuel: 'Gasoline', vinPrefix: '' }
     ];
 
-    const ECU_TOPOLOGY_TARGETS = [
-      { hdr: '7E0', name: 'Engine (ECM)', group: 'Powertrain' },
-      { hdr: '7E1', name: 'Transmission (TCM)', group: 'Powertrain' },
-      { hdr: '7E2', name: 'Hybrid / EV Control', group: 'Powertrain' },
-      { hdr: '7E3', name: 'OBC / DC-DC', group: 'Powertrain' },
-      { hdr: '7E4', name: 'HV Battery (BMS)', group: 'Battery' },
-      { hdr: '7E5', name: 'Aux / Gateway / SAM', group: 'Body' },
-      { hdr: '7E6', name: 'Chassis / EPS', group: 'Chassis' },
-      { hdr: '7E7', name: 'ABS / ESC', group: 'Chassis' },
-      { hdr: '770', name: 'Body Control (BCM)', group: 'Body' },
-      { hdr: '7A0', name: 'TPMS', group: 'Chassis' },
-      { hdr: '7C6', name: 'Instrument Cluster', group: 'Body' },
-      { hdr: '7D0', name: 'ADAS / Safety', group: 'ADAS' },
-      { hdr: '7A2', name: 'Subaru ECM', group: 'Subaru' },
-      { hdr: '753', name: 'Subaru TPMS', group: 'Subaru' },
-      { hdr: '746', name: 'Subaru EPS/VDC', group: 'Subaru' }
-    ];
+    const VEHICLE_TOPOLOGY_PROFILES = {
+      elantra: [
+        { hdr: '7E0', name: 'Engine (ECM)', group: 'Powertrain' },
+        { hdr: '7E1', name: 'Transmission (TCM)', group: 'Powertrain' },
+        { hdr: '7E2', name: 'Hybrid Control (HPCM)', group: 'Hybrid' },
+        { hdr: '7E3', name: 'Drive Motor (DMCM)', group: 'Hybrid' },
+        { hdr: '7E4', name: 'HV Battery (BECM)', group: 'Battery' },
+        { hdr: '7E7', name: 'Electronic Brake (EBB)', group: 'Chassis' },
+        { hdr: '770', name: 'Body Control (BCM)', group: 'Body' },
+        { hdr: '7A0', name: 'TPMS', group: 'Chassis' },
+        { hdr: '7C6', name: 'Instrument Cluster', group: 'Body' },
+        { hdr: '7D0', name: 'ADAS / Safety', group: 'ADAS' }
+      ],
+      legacy: [
+        { hdr: '7E0', name: 'Engine (ECM)', group: 'Powertrain' },
+        { hdr: '7E1', name: 'CVT Transmission (TCM)', group: 'Powertrain' },
+        { hdr: '7A2', name: 'Subaru Extended ECM', group: 'Powertrain' },
+        { hdr: '753', name: 'Subaru TPMS', group: 'Chassis' },
+        { hdr: '746', name: 'Subaru EPS / VDC', group: 'Chassis' },
+        { hdr: '7B0', name: 'ABS / Stability', group: 'Chassis' }
+      ],
+      e350: [
+        { hdr: '7E0', name: 'Engine (M276 ECM)', group: 'Powertrain' },
+        { hdr: '7E1', name: '7G-Tronic (TCM)', group: 'Powertrain' },
+        { hdr: '7E5', name: 'Aux / SAM / Gateway', group: 'Body' },
+        { hdr: '7E7', name: 'ESP / ABS Brake', group: 'Chassis' }
+      ],
+      crv: [
+        { hdr: '7E0', name: 'Engine (K24W9 ECM)', group: 'Powertrain' },
+        { hdr: '7E1', name: 'CVT Transmission (TCM)', group: 'Powertrain' },
+        { hdr: '7E7', name: 'ABS / VSA', group: 'Chassis' },
+        { hdr: '7C6', name: 'Gauge / Body Control', group: 'Body' }
+      ],
+      generic: [
+        { hdr: '7E0', name: 'Engine (ECM)', group: 'Powertrain' },
+        { hdr: '7E1', name: 'Transmission (TCM)', group: 'Powertrain' },
+        { hdr: '7E2', name: 'Hybrid / Aux Powertrain', group: 'Powertrain' },
+        { hdr: '7E4', name: 'Battery / HV Module', group: 'Battery' },
+        { hdr: '7E7', name: 'ABS / Stability', group: 'Chassis' },
+        { hdr: '770', name: 'Body Control (BCM)', group: 'Body' },
+        { hdr: '7C6', name: 'Instrument Cluster', group: 'Body' }
+      ]
+    };
+    const ECU_TOPOLOGY_TARGETS = VEHICLE_TOPOLOGY_PROFILES.generic;
+    const LEARNED_TOPO_KEY = 'obd2_learned_topology_v1';
+
+    function getTopologyForVehicle(vehicleId, vin) {
+      try {
+        const saved = JSON.parse(localStorage.getItem(LEARNED_TOPO_KEY) || '{}');
+        if (vin && Array.isArray(saved[vin]) && saved[vin].length) {
+          return saved[vin].map(m => ({ ...m }));
+        }
+      } catch (e) {}
+      const list = VEHICLE_TOPOLOGY_PROFILES[vehicleId] || VEHICLE_TOPOLOGY_PROFILES.generic;
+      return list.map(m => ({ ...m, status: 'pending', part: '', dtcCount: 0 }));
+    }
+
+    function saveLearnedTopology(vin, modules) {
+      if (!vin || !Array.isArray(modules)) return;
+      try {
+        const saved = JSON.parse(localStorage.getItem(LEARNED_TOPO_KEY) || '{}');
+        const online = modules.filter(m => m.status === 'ok' || m.status === 'fault');
+        if (online.length) {
+          saved[vin] = online.map(m => ({ hdr: m.hdr, name: m.name, group: m.group, status: m.status, part: m.part || '', dtcCount: m.dtcCount || 0 }));
+          localStorage.setItem(LEARNED_TOPO_KEY, JSON.stringify(saved));
+        }
+      } catch (e) {}
+    }
 
     const FLEET_MODULES = {
       elantra: {
@@ -905,6 +985,9 @@
       mode: 'disconnected',
       units: 'imperial',
       vehicle: { ...FLEET_PRESETS[0] },
+      vehicleIdentified: false,
+      iceSteadyCount: 0,
+      hvBms: null,
       detectedVin: '',
       telemetry: {
         rpm: null, speedKmh: null, throttle: null, load: null,
@@ -1280,6 +1363,11 @@
 
     function renderTopologyGrid() {
       const grid = document.getElementById('topologyGrid');
+      if (!state.vehicleIdentified && state.mode === 'disconnected') {
+        document.getElementById('homeEcuCount').textContent = '--';
+        grid.innerHTML = '<div class="col-span-full rounded-xl border border-slate-800 bg-slate-900/50 p-4 text-xs text-slate-400">Connect to a vehicle first — OBD2 Pro Link auto-reads your VIN, loads only that car\'s CAN modules, and remembers every discovered ECU for future scans.</div>';
+        return;
+      }
       const onlineCount = state.topology.filter(e => e.status === 'ok' || e.status === 'fault').length;
       document.getElementById('homeEcuCount').textContent = state.topology.some(e => e.status !== 'pending') ? `${onlineCount}/${state.topology.length}` : '--';
       grid.innerHTML = state.topology.map(e => {
@@ -1568,8 +1656,13 @@
       document.getElementById('specRedline').value = state.vehicle.redline;
       document.getElementById('specDisp').value = state.vehicle.disp;
       document.getElementById('specFuel').value = state.vehicle.fuel;
-      document.getElementById('activeVehicleLabel').textContent = state.vehicle.name;
-      document.getElementById('homeVehicleName').textContent = state.vehicle.name;
+      if (state.vehicleIdentified || state.mode !== 'disconnected') {
+        document.getElementById('activeVehicleLabel').textContent = state.vehicle.name;
+        document.getElementById('homeVehicleName').textContent = state.vehicle.name;
+      } else {
+        document.getElementById('activeVehicleLabel').textContent = 'Not Connected — Auto-VIN Ready';
+        document.getElementById('homeVehicleName').textContent = 'No Vehicle Connected';
+      }
       renderModulesTab();
     }
 
@@ -1682,9 +1775,7 @@
           let done = false;
           const finish = (v) => { if (done) return; done = true; delete nativeCmdWaiters[cbId]; if (cmd.trim()) state.rawPidReplies[cmd.trim().toUpperCase()] = v; resolve(v); };
           nativeCmdWaiters[cbId] = finish;
-          try {
-            window.AndroidObd.sendCommand(cmd.trim(), cbId);
-          } catch (e) { finish('ERR: ' + e.message); }
+          try { window.AndroidObd.sendCommand(cmd.trim(), cbId); } catch (e) { finish('ERR: ' + e.message); }
           setTimeout(() => finish('TIMEOUT'), timeoutMs + 500);
         });
       }
@@ -1707,11 +1798,28 @@
       return next;
     }
 
+    function reassembleIsoTpHex(raw) {
+      if (!raw) return '';
+      const up = raw.toUpperCase();
+      // Case 1: ATH0 multi-frame ("014 0:490201... 1:4C4E... 2:5531...")
+      if (/\b0:/.test(up)) {
+        const matches = [...up.matchAll(/[0-9A-F]:([0-9A-F]+)/g)];
+        if (matches.length) return matches.map(m => m[1]).join('');
+      }
+      // Case 2: ATH1 multi-frame ("7E81014490201... 7E821... 7E822...")
+      const tokens = up.split(/\s+/).filter(Boolean);
+      if (tokens.length && tokens.every(t => /^7[0-9A-F]{2}[12][0-9A-F]/.test(t))) {
+        return tokens.map(t => (t[3] === '1' ? t.slice(7) : t.slice(5))).join('');
+      }
+      return up.replace(/[^0-9A-F]/g, '');
+    }
+
     function decodeVinFromHex(raw) {
-      const hex = raw.replace(/[^0-9A-F]/gi, '').toUpperCase();
-      const idx = hex.indexOf('4902');
-      if (idx === -1) return '';
-      let payload = hex.slice(idx + 6);
+      const hex = reassembleIsoTpHex(raw);
+      const idx = hex.indexOf('490201');
+      const start = idx !== -1 ? idx + 6 : (hex.indexOf('4902') !== -1 ? hex.indexOf('4902') + 4 : -1);
+      if (start === -1) return '';
+      const payload = hex.slice(start);
       let ascii = '';
       for (let i = 0; i + 1 < payload.length; i += 2) {
         const code = parseInt(payload.slice(i, i + 2), 16);
@@ -1719,6 +1827,52 @@
       }
       const m = ascii.match(/[A-HJ-NPR-Z0-9]{17}/);
       return m ? m[0] : '';
+    }
+
+    function decodeHyundaiHvBms(raw) {
+      const hex = reassembleIsoTpHex(raw);
+      const idx = hex.indexOf('620101');
+      if (idx === -1) return null;
+      const p = hex.slice(idx + 6);
+      if (p.length < 54) return null;
+      const b = [];
+      for (let i = 0; i + 1 < p.length; i += 2) b.push(parseInt(p.slice(i, i + 2), 16));
+      if (b.length < 27) return null;
+      const socPct = b[4] / 2.0;
+      let rawCurr = (b[10] << 8) | b[11];
+      if (rawCurr >= 32768) rawCurr -= 65536;
+      const currentA = rawCurr / 10.0;
+      const packV = ((b[12] << 8) | b[13]) / 10.0;
+      const tMaxC = b[14] < 128 ? b[14] : b[14] - 256;
+      const tMinC = b[15] < 128 ? b[15] : b[15] - 256;
+      const cellMaxV = b[23] * 0.02;
+      const cellMinV = b[25] * 0.02;
+      return {
+        socPct: Math.round(socPct * 10) / 10,
+        packV: Math.round(packV * 10) / 10,
+        currentA: Math.round(currentA * 10) / 10,
+        cellMaxV: Math.round(cellMaxV * 100) / 100,
+        cellMinV: Math.round(cellMinV * 100) / 100,
+        cellDeltaMv: Math.round((cellMaxV - cellMinV) * 1000),
+        tempMaxC: tMaxC,
+        tempMinC: tMinC
+      };
+    }
+
+    function renderHvBmsCard() {
+      const card = document.getElementById('hvBmsCard');
+      if (!card) return;
+      const d = state.hvBms;
+      if (!d) { card.classList.add('hidden'); return; }
+      card.classList.remove('hidden');
+      const imp = state.units === 'imperial';
+      const tVal = imp ? `${Math.round(d.tempMaxC * 9 / 5 + 32)} °F` : `${d.tempMaxC} °C`;
+      document.getElementById('hvBmsSocBadge').textContent = `${d.socPct.toFixed(1)}%`;
+      document.getElementById('hvBmsSummary').textContent = `Cell Balance: ${d.cellDeltaMv} mV delta (${d.cellDeltaMv <= 40 ? 'Healthy' : 'Check Balance'})`;
+      document.getElementById('hvPackV').textContent = `${d.packV.toFixed(1)} V`;
+      document.getElementById('hvPackA').textContent = `${d.currentA >= 0 ? '+' : ''}${d.currentA.toFixed(1)} A`;
+      document.getElementById('hvCellRange').textContent = `${d.cellMaxV.toFixed(2)} / ${d.cellMinV.toFixed(2)} V`;
+      document.getElementById('hvPackTemp').textContent = tVal;
     }
 
     async function initElmProtocol() {
@@ -1740,14 +1894,22 @@
       const vin = decodeVinFromHex(vinRaw);
       if (vin) {
         state.detectedVin = vin;
+        state.vehicleIdentified = true;
         document.getElementById('homeVinDisplay').textContent = `Auto-VIN: ${vin}`;
         const matched = FLEET_PRESETS.find(p => p.vinPrefix && vin.startsWith(p.vinPrefix));
-        if (matched && state.vehicle.id !== matched.id) {
+        if (matched) {
           state.vehicle = { ...matched };
           saveSpecsToStorage();
-          renderVehicleSpecs();
-          showToast(`Auto-VIN matched: ${matched.name}`);
         }
+        state.topology = getTopologyForVehicle(state.vehicle.id, vin);
+        renderVehicleSpecs();
+        renderTopologyGrid();
+        showToast(`Auto-VIN matched: ${state.vehicle.name}`);
+      } else {
+        state.vehicleIdentified = true;
+        state.topology = getTopologyForVehicle('generic', '');
+        renderVehicleSpecs();
+        renderTopologyGrid();
       }
     }
 
@@ -1756,7 +1918,13 @@
       state.ble = { device: null, server: null, writeChar: null, notifyChar: null, rxBuf: '', pendingResolve: null };
       state.mode = 'disconnected';
       stopAllRecorders();
+      state.vehicleIdentified = false;
+      state.detectedVin = '';
+      state.hvBms = null;
+      renderHvBmsCard();
       resetTelemetryNull();
+      renderVehicleSpecs();
+      renderTopologyGrid();
       setEcuAlert('');
       document.getElementById('hwDebugBar').classList.add('hidden');
       document.getElementById('pollRateBadge').textContent = '-- Hz';
@@ -1899,14 +2067,20 @@
             state.telemetry.hp = mafHp > 0 ? mafHp : loadHp;
             state.telemetry.tq = (state.telemetry.hp * 5252) / state.telemetry.rpm;
 
-            // Ideal 4-stroke air mass flow at 100% VE: (RPM/120) * disp_L * air_density_g_L
-            if (state.telemetry.mafGs > 0) {
-              const iatK = (state.telemetry.iatC !== null ? state.telemetry.iatC : 20) + 273.15;
-              const airDensity = (101.325 * 28.97) / (8.3145 * iatK); // g/L at 1 atm
-              const theoreticalMaf = (state.telemetry.rpm / 120) * (state.vehicle.disp || 2.0) * airDensity;
-              state.telemetry.ve = theoreticalMaf > 0 ? Math.min(130, (state.telemetry.mafGs / theoreticalMaf) * 100) : null;
+            // Gate VE% to steady ICE operation (RPM > 800 for >= 2 polls) to avoid 0->2000 RPM startup spikes
+            if (state.telemetry.rpm > 800 && state.telemetry.mafGs > 0.5) {
+              state.iceSteadyCount = Math.min(10, (state.iceSteadyCount || 0) + 1);
+              if (state.iceSteadyCount >= 2) {
+                const iatK = (state.telemetry.iatC !== null ? state.telemetry.iatC : 20) + 273.15;
+                const airDensity = (101.325 * 28.97) / (8.3145 * iatK);
+                const theoreticalMaf = (state.telemetry.rpm / 120) * (state.vehicle.disp || 2.0) * airDensity;
+                state.telemetry.ve = theoreticalMaf > 0 ? Math.min(105, (state.telemetry.mafGs / theoreticalMaf) * 100) : null;
+              }
+            } else {
+              state.iceSteadyCount = 0;
             }
           } else if (state.telemetry.rpm !== null) {
+            state.iceSteadyCount = 0;
             state.telemetry.hp = 0; state.telemetry.tq = 0; state.telemetry.ve = 0;
           }
 
@@ -1925,18 +2099,33 @@
 
     // ==================== DIAGNOSTIC MODES (TOPOLOGY, I/M, FREEZE, MODE 06, DTC) ====================
     function decodeDtcHex(raw, modePrefix, typeLabel) {
-      const clean = raw.replace(/[^0-9A-F]/gi, '').toUpperCase();
-      const idx = clean.indexOf(modePrefix);
-      if (idx === -1) return [];
-      const hex = clean.slice(idx + 2);
-      const found = [];
+      if (!raw || /NO DATA|ERROR|TIMEOUT/i.test(raw)) return [];
+      const prefix = modePrefix.toUpperCase();
       const sysMap = ['P', 'C', 'B', 'U'];
-      for (let i = 0; i + 3 < hex.length; i += 4) {
-        const b1 = parseInt(hex.slice(i, i + 2), 16);
-        const b2 = parseInt(hex.slice(i + 2, i + 4), 16);
-        if (b1 === 0 && b2 === 0) continue;
-        const code = `${sysMap[(b1 >> 6) & 3]}${(b1 >> 4) & 3}${(b1 & 15).toString(16).toUpperCase()}${hex.slice(i + 2, i + 4)}`;
-        found.push({ code, type: typeLabel, desc: DTC_DICT[code] || 'OBD-II / Manufacturer Diagnostic Trouble Code' });
+      const seen = new Set();
+      const found = [];
+      // Split multi-ECU responses cleanly by whitespace/lines so 6x "4300" never merges into fake P0043
+      const frames = raw.toUpperCase().split(/[\r\n\s]+/).filter(Boolean);
+      for (const frame of frames) {
+        const clean = frame.replace(/[^0-9A-F]/g, '');
+        const idx = clean.indexOf(prefix);
+        if (idx === -1) continue;
+        const payload = clean.slice(idx + 2);
+        // ISO 15765-4 CAN: first byte after 43/47/4A is DTC count (00 = zero DTCs on this ECU)
+        if (payload.length < 2) continue;
+        const dtcCount = parseInt(payload.slice(0, 2), 16);
+        if (dtcCount === 0) continue;
+        const dataHex = payload.slice(2);
+        for (let i = 0; i + 3 < dataHex.length; i += 4) {
+          const b1 = parseInt(dataHex.slice(i, i + 2), 16);
+          const b2 = parseInt(dataHex.slice(i + 2, i + 4), 16);
+          if (b1 === 0 && b2 === 0) continue;
+          const code = `${sysMap[(b1 >> 6) & 3]}${(b1 >> 4) & 3}${(b1 & 15).toString(16).toUpperCase()}${dataHex.slice(i + 2, i + 4)}`;
+          if (!seen.has(code)) {
+            seen.add(code);
+            found.push({ code, type: typeLabel, desc: DTC_DICT[code] || 'OBD-II / Manufacturer Diagnostic Trouble Code' });
+          }
+        }
       }
       return found;
     }
@@ -1990,7 +2179,8 @@
           renderTopologyGrid();
         }
         if (state.driveSync.url) flushDriveSync({ discovery: state.discoveryResults, rawReplies: state.rawPidReplies });
-        showToast('ECU Topology Scan complete & synced to Drive!');
+        saveLearnedTopology(state.detectedVin, state.topology);
+        showToast('ECU Topology Scan complete, saved to vehicle profile & synced to Drive!');
       } finally {
         await sendAdapterCmd('ATSH7DF', 1000);
         await sendAdapterCmd('ATCRA', 1000);
@@ -2295,20 +2485,33 @@
             if (connDot) connDot.className = 'w-1.5 h-1.5 rounded-full bg-cyan-400';
             if (btn) btn.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm shadow-cyan-500/25 transition';
             if (btnTxt) btnTxt.textContent = 'Capture 20m';
+            if (state.vehicleIdentified) {
+              state.vehicleIdentified = false;
+              state.detectedVin = '';
+              state.hvBms = null;
+              renderHvBmsCard();
+              renderVehicleSpecs();
+              renderTopologyGrid();
+            }
+          }
+
+          if (snap.hvBms) {
+            state.hvBms = snap.hvBms;
+            renderHvBmsCard();
           }
 
           if (snap.vin && snap.vin !== state.detectedVin) {
             state.detectedVin = snap.vin;
+            state.vehicleIdentified = true;
             const vinEl = document.getElementById('homeVinDisplay');
             if (vinEl) vinEl.textContent = `Auto-VIN: ${snap.vin}`;
             const matched = FLEET_PRESETS.find(p => p.vinPrefix && snap.vin.startsWith(p.vinPrefix));
-            if (matched && state.vehicle.id !== matched.id) {
-              state.vehicle = { ...matched };
-              renderVehicleSpecs();
-            }
+            if (matched) state.vehicle = { ...matched };
+            state.topology = getTopologyForVehicle(state.vehicle.id, snap.vin);
+            renderVehicleSpecs();
+            renderTopologyGrid();
           }
 
-          // Drive health badge from native SQLite/Drive manager
           if (snap.driveHealth) {
             state.driveSync.healthy = Boolean(snap.driveHealth.ok);
             state.driveSync.totalSynced = snap.totalRows || 0;
@@ -2329,29 +2532,24 @@
             }
           }
 
-          // Stream live telemetry into the sleek gauges & 4-channel graph
           if (snap.live && running) {
             const L = snap.live;
-            if (L.rpm !== null && L.rpm !== undefined) state.live.rpm = L.rpm;
-            if (L.mph !== null && L.mph !== undefined) state.live.speed = L.mph;
-            if (L.load !== null && L.load !== undefined) state.live.load = L.load;
-            if (L.throttle !== null && L.throttle !== undefined) state.live.throttle = L.throttle;
-            if (L.maf !== null && L.maf !== undefined) state.live.maf = L.maf;
-            if (L.coolantF !== null && L.coolantF !== undefined) state.live.coolant = L.coolantF;
-            if (L.intakeF !== null && L.intakeF !== undefined) state.live.intake = L.intakeF;
-            if (L.stft !== null && L.stft !== undefined) state.live.stft = L.stft;
-            if (L.ltft !== null && L.ltft !== undefined) state.live.ltft = L.ltft;
-            if (L.volts !== null && L.volts !== undefined) state.live.voltage = L.volts;
+            if (L.rpm !== null && L.rpm !== undefined) state.telemetry.rpm = L.rpm;
+            if (L.mph !== null && L.mph !== undefined) state.telemetry.speedKmh = L.mph / 0.621371;
+            if (L.load !== null && L.load !== undefined) state.telemetry.load = L.load;
+            if (L.throttle !== null && L.throttle !== undefined) state.telemetry.throttle = L.throttle;
+            if (L.maf !== null && L.maf !== undefined) state.telemetry.mafGs = L.maf;
+            if (L.coolantF !== null && L.coolantF !== undefined) state.telemetry.coolantC = (L.coolantF - 32) * 5 / 9;
+            if (L.intakeF !== null && L.intakeF !== undefined) state.telemetry.iatC = (L.intakeF - 32) * 5 / 9;
+            if (L.stft !== null && L.stft !== undefined) state.telemetry.stft = L.stft;
+            if (L.ltft !== null && L.ltft !== undefined) state.telemetry.ltft = L.ltft;
+            if (L.volts !== null && L.volts !== undefined) state.telemetry.voltage = L.volts;
             if (snap.totalRows !== lastRowCount) {
               lastRowCount = snap.totalRows;
-              if (typeof updateTelemetryAndCharts === 'function') updateTelemetryAndCharts();
-              else renderTelemetryUI();
-            } else {
               renderTelemetryUI();
             }
           }
 
-          // Render recent SQLite sessions in Fleet tab
           const sessBox = document.getElementById('nativeSessionsBox');
           if (sessBox && Array.isArray(snap.sessions)) {
             if (!snap.sessions.length) {
