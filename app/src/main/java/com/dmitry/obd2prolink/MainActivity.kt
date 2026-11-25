@@ -194,6 +194,9 @@ class MainActivity : AppCompatActivity() {
                 put("remainingSec", ObdCaptureService.remainingSeconds)
                 put("totalRows", ObdCaptureService.currentTotalRows)
                 put("live", liveObj)
+                if (ObdCaptureService.hvBmsJson.isNotEmpty()) {
+                    runCatching { put("hvBms", JSONObject(ObdCaptureService.hvBmsJson)) }
+                }
                 put("bufferedBatches", qBatches)
                 put("bufferedRows", qRows)
                 put("driveHealth", JSONObject().apply {
