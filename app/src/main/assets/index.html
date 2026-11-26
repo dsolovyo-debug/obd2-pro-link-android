@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#080c15" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
-  <title>OBD2 Pro Link v3.0 — ICON T10 Deep Diagnostics</title>
+  <title>OBD2 Pro Link v3.2 — ICON T10 Deep Diagnostics</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -61,60 +61,44 @@
 <body class="min-h-screen flex flex-col bg-[#080c15] text-slate-100 antialiased">
 
   <!-- Compact Sticky Top Bar -->
-  <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-[#0d1320]/95 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2.5 min-w-0">
-        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/20">
-          <i data-lucide="activity" class="w-4 h-4 sm:w-5 sm:h-5 text-white"></i>
-        </div>
-        <div class="min-w-0">
-          <div class="flex items-center gap-1.5 flex-wrap">
-            <h1 class="text-sm sm:text-base font-bold tracking-tight text-white">OBD2 Pro Link</h1>
-            <span id="connBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-800 text-slate-300 border border-slate-700">
-              <span id="connDot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
-              <span id="connText">Disconnected</span>
-            </span>
-            <span id="driveSyncBadge" class="hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
-              <span id="driveSyncText">Drive: Auto</span>
-            </span>
+  <header class="sticky top-0 z-40 border-b border-slate-800/90 bg-[#0b1220]/95 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 py-2 space-y-1.5">
+      <!-- Row 1: Brand + Crisp Single-Line Action Buttons -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/20">
+            <i data-lucide="activity" class="w-4 h-4 text-white"></i>
           </div>
-          <p id="activeVehicleLabel" class="text-[11px] text-slate-400 truncate">Not Connected — Auto-VIN Ready</p>
+          <h1 class="text-sm sm:text-base font-bold tracking-tight text-white whitespace-nowrap">OBD2 Pro Link</h1>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="unitToggleBtn" type="button" class="px-2 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 whitespace-nowrap transition">
+            MPH/°F
+          </button>
+          <button id="demoToggleBtn" type="button" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 whitespace-nowrap transition">
+            Demo
+          </button>
+          <button id="connectBleBtn" type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm shadow-cyan-500/25 whitespace-nowrap transition">
+            <i data-lucide="bluetooth" class="w-3.5 h-3.5"></i>
+            <span id="connectBleBtnText">Connect</span>
+          </button>
         </div>
       </div>
 
-      <div class="flex items-center gap-1.5 shrink-0">
-        <button id="unitToggleBtn" type="button" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
-          MPH/°F
-        </button>
-        <button id="connectBleBtn" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm shadow-cyan-500/25 transition">
-          <i data-lucide="bluetooth" class="w-3.5 h-3.5"></i>
-          <span id="connectBleBtnText">Connect</span>
-        </button>
+      <!-- Row 2: Clean Status Strip (Zero Overlap on Narrow Phones) -->
+      <div class="flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span id="connBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">
+            <span id="connDot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+            <span id="connText">Disconnected</span>
+          </span>
+          <span id="driveSyncBadge" class="hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 whitespace-nowrap">
+            <span id="driveSyncText">Drive: Auto</span>
+          </span>
+        </div>
+        <p id="activeVehicleLabel" class="text-[11px] text-slate-400 truncate max-w-[220px] sm:max-w-md">Not Connected — Auto-VIN Ready</p>
       </div>
     </div>
-
-    <!-- Desktop Navigation Tabs -->
-    <nav class="hidden md:flex max-w-7xl mx-auto px-6 pb-2.5 items-center gap-1.5">
-      <button type="button" data-view="home" class="nav-btn active inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium border border-transparent text-slate-400 hover:text-slate-200 transition">
-        <i data-lucide="layout-grid" class="w-4 h-4"></i><span>Dashboard</span>
-      </button>
-      <button type="button" data-view="topology" class="nav-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium border border-transparent text-slate-400 hover:text-slate-200 transition">
-        <i data-lucide="network" class="w-4 h-4"></i><span>ECU Topology</span>
-      </button>
-      <button type="button" data-view="live" class="nav-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium border border-transparent text-slate-400 hover:text-slate-200 transition">
-        <i data-lucide="gauge" class="w-4 h-4"></i><span>Live Data &amp; Graph</span>
-      </button>
-      <button type="button" data-view="diag" class="nav-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium border border-transparent text-slate-400 hover:text-slate-200 transition">
-        <i data-lucide="shield-alert" class="w-4 h-4"></i><span>Diagnostics (Modes 01–0A)</span>
-        <span id="dtcCountPill" class="px-1.5 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">0</span>
-      </button>
-      <button type="button" data-view="perf" class="nav-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium border border-transparent text-slate-400 hover:text-slate-200 transition">
-        <i data-lucide="zap" class="w-4 h-4"></i><span>Performance &amp; VE</span>
-      </button>
-      <button type="button" data-view="fleet" class="nav-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium border border-transparent text-slate-400 hover:text-slate-200 transition">
-        <i data-lucide="car" class="w-4 h-4"></i><span>Fleet, Service &amp; Logs</span>
-      </button>
-    </nav>
   </header>
 
   <!-- Main Workspace -->
@@ -188,7 +172,7 @@
               <div id="homeVinDisplay" class="text-xs font-mono text-slate-400 mt-0.5">Connect IOS-Vlink to auto-identify vehicle</div>
             </div>
             <button id="homePrintReportBtn" type="button" class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
-              <i data-lucide="printer" class="w-3.5 h-3.5"></i><span>Health Report</span>
+              <i data-lucide="printer" class="w-3.5 h-3.5"></i><span>PDF Report</span>
             </button>
           </div>
           <div class="grid grid-cols-3 gap-2 text-center">
@@ -1028,6 +1012,313 @@
       renderTopologyView();
     }
 
+    function toggleDemoMode() {
+      const btn = document.getElementById('demoToggleBtn');
+      if (state.demoActive) {
+        state.demoActive = false;
+        if (state.demoTimer) { clearInterval(state.demoTimer); state.demoTimer = null; }
+        stopTopoLiveStream();
+        state.mode = 'disconnected';
+        state.vehicleIdentified = false;
+        state.detectedVin = '';
+        state.hvBms = null;
+        topoNav.level = 1; topoNav.ecu = null; topoNav.category = null; topoNav.lastValues = {};
+        state.minMax = {};
+        const vinEl = document.getElementById('homeVinDisplay');
+        if (vinEl) vinEl.textContent = 'Connect IOS-Vlink to auto-identify vehicle';
+        const bMin = document.getElementById('batMinV'); if (bMin) bMin.textContent = '-- V';
+        const bMax = document.getElementById('batMaxV'); if (bMax) bMax.textContent = '-- V';
+        const bSt = document.getElementById('batStatusText'); if (bSt) bSt.textContent = 'Connect adapter to monitor voltage';
+        renderHvBmsCard();
+        resetTelemetryNull();
+        renderVehicleSpecs();
+        renderTopologyView();
+        document.getElementById('connText').textContent = isAndroidNative() ? 'Auto Standby' : 'Disconnected';
+        document.getElementById('connBadge').className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-800 text-slate-300 border border-slate-700';
+        document.getElementById('connDot').className = 'w-1.5 h-1.5 rounded-full bg-slate-500';
+        if (btn) { btn.textContent = 'Demo'; btn.className = 'px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 transition'; }
+        showToast('Demo Mode OFF — ready for live IOS-Vlink.');
+        return;
+      }
+
+      if (state.mode === 'ble') { showToast('Disconnect live adapter before starting Demo Mode.'); return; }
+      state.demoActive = true;
+      state.mode = 'demo';
+      state.vehicle = { ...FLEET_PRESETS[0] };
+      state.vehicleIdentified = true;
+      state.detectedVin = 'KMHLN4DJ2RU106282';
+      state.topology = getTopologyForVehicle('elantra', state.detectedVin).map(m => ({ ...m, status: 'ok', part: 'OEM-VERIFIED', dtcCount: 0 }));
+      state.hvBms = { socPct: 47.0, packV: 235.0, currentA: -4.9, cellMaxV: 3.66, cellMinV: 3.66, cellDeltaMv: 0, tempMaxC: 18, tempMinC: 17 };
+      document.getElementById('homeVinDisplay').textContent = 'DEMO Auto-VIN: KMHLN4DJ2RU106282';
+      document.getElementById('connText').textContent = 'DEMO MODE';
+      document.getElementById('connBadge').className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/20 text-amber-300 border border-amber-500/40';
+      document.getElementById('connDot').className = 'w-1.5 h-1.5 rounded-full bg-amber-400';
+      if (btn) { btn.textContent = 'Exit Demo'; btn.className = 'px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-amber-500 text-slate-950 transition'; }
+      renderVehicleSpecs();
+      renderHvBmsCard();
+      renderTopologyView();
+
+      let tick = 0;
+      const stepDemo = () => {
+        if (!state.demoActive) return;
+        tick++;
+        const evPhase = (tick % 16) < 5;
+        state.telemetry.rpm = evPhase ? 0 : Math.round(1450 + Math.sin(tick * 0.4) * 650 + Math.random() * 120);
+        state.telemetry.speedKmh = Math.max(0, Math.round(52 + Math.sin(tick * 0.25) * 32));
+        state.telemetry.load = evPhase ? 0 : Math.round(28 + Math.sin(tick * 0.4) * 22);
+        state.telemetry.throttle = evPhase ? 16 : Math.round(22 + Math.sin(tick * 0.4) * 18);
+        state.telemetry.coolantC = Math.min(82, 52 + tick * 0.3);
+        state.telemetry.iatC = 17;
+        state.telemetry.mafGs = evPhase ? 0 : Math.round((8.5 + Math.sin(tick * 0.4) * 5.2) * 100) / 100;
+        state.telemetry.stft = Math.round((Math.sin(tick * 0.3) * 3.2) * 10) / 10;
+        state.telemetry.ltft = 1.6;
+        state.telemetry.voltage = evPhase ? 13.0 : 13.82;
+        state.telemetry.ve = evPhase ? 0 : Math.round(62 + Math.sin(tick * 0.4) * 15);
+        state.hvBms.socPct = Math.round((46.5 + Math.sin(tick * 0.1) * 1.5) * 10) / 10;
+        state.hvBms.currentA = Math.round((evPhase ? 18.4 : -5.2) * 10) / 10;
+        renderHvBmsCard();
+        renderTelemetryUI();
+      };
+      stepDemo();
+      state.demoTimer = setInterval(stepDemo, 800);
+      showToast('Demo Mode ON (offline preview — never logs to Drive).');
+    }
+
+
+    function generateVehicleHealthPdf() {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        showToast('PDF library still loading — try again in a second.');
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
+      const W = doc.internal.pageSize.getWidth();
+      const H = doc.internal.pageSize.getHeight();
+      const M = 40;
+      let y = 0;
+
+      const isDemo = Boolean(state.demoActive);
+      const vehicleTitle = state.vehicleIdentified ? state.vehicle.name : 'No Vehicle Connected';
+      const vinStr = state.detectedVin || 'Not Read';
+      const nowStr = new Date().toLocaleString();
+      const dtcCount = state.dtcs ? state.dtcs.length : 0;
+      const onlineEcus = (state.topology || []).filter(e => e.status === 'ok' || e.status === 'fault');
+      const imp = state.units === 'imperial';
+
+      // Dark Executive Header Banner
+      doc.setFillColor(11, 18, 32);
+      doc.rect(0, 0, W, 94, 'F');
+      doc.setFillColor(6, 182, 212);
+      doc.rect(0, 94, W, 3, 'F');
+
+      doc.setTextColor(6, 182, 212);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text(isDemo ? 'OBD2 PRO LINK  •  DEMO PREVIEW REPORT' : 'OBD2 PRO LINK  •  VEHICLE DIAGNOSTIC HEALTH REPORT', M, 28);
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.text(vehicleTitle, M, 52);
+
+      doc.setTextColor(148, 163, 184);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9.5);
+      doc.text(`VIN: ${vinStr}   |   Generated: ${nowStr}`, M, 72);
+
+      // Verdict Pill (top right)
+      const pillColor = dtcCount === 0 ? [16, 185, 129] : [239, 68, 68];
+      doc.setFillColor(pillColor[0], pillColor[1], pillColor[2]);
+      doc.roundedRect(W - M - 132, 30, 132, 28, 6, 6, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text(dtcCount === 0 ? 'HEALTHY • 0 DTCs' : `ATTENTION • ${dtcCount} DTC(s)`, W - M - 66, 48, { align: 'center' });
+
+      y = 120;
+
+      const addSectionTitle = (title) => {
+        if (y > H - 90) { doc.addPage(); y = 48; }
+        doc.setTextColor(15, 23, 42);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11.5);
+        doc.text(title, M, y);
+        doc.setDrawColor(203, 213, 225);
+        doc.line(M, y + 5, W - M, y + 5);
+        y += 20;
+      };
+
+      // Section 1: Key Telemetry & Charging Summary
+      addSectionTitle('1. Powertrain, Battery & Session Telemetry');
+      const t = state.telemetry || {};
+      const mm = state.minMax || {};
+      const fmtNum = (v, unit = '', dec = 1) => (v === null || v === undefined || isNaN(v)) ? '--' : `${Number(v).toFixed(dec)}${unit}`;
+      const coolVal = t.coolantC !== null && t.coolantC !== undefined
+        ? (imp ? `${(t.coolantC * 9 / 5 + 32).toFixed(0)} °F` : `${t.coolantC.toFixed(0)} °C`) : '--';
+      const spdVal = t.speedKmh !== null && t.speedKmh !== undefined
+        ? (imp ? `${(t.speedKmh * 0.621371).toFixed(0)} MPH` : `${t.speedKmh.toFixed(0)} km/h`) : '--';
+      const vMin = mm.voltage?.min !== undefined ? `${mm.voltage.min.toFixed(2)} V` : '--';
+      const vMax = mm.voltage?.max !== undefined ? `${mm.voltage.max.toFixed(2)} V` : '--';
+
+      const kpis = [
+        ['12V Bus Voltage', `${fmtNum(t.voltage, ' V', 2)}`, `Min ${vMin} / Max ${vMax}`],
+        ['Engine RPM / Load', `${t.rpm !== null && t.rpm !== undefined ? Math.round(t.rpm) : '--'} RPM`, `Load: ${fmtNum(t.load, '%', 0)} | VE: ${fmtNum(t.ve, '%', 0)}`],
+        ['Coolant Temp', coolVal, `Speed: ${spdVal}`],
+        ['Fuel Trims (B1)', `STFT ${fmtNum(t.stft, '%', 1)}`, `LTFT ${fmtNum(t.ltft, '%', 1)}`]
+      ];
+      const cardW = (W - M * 2 - 18) / 4;
+      kpis.forEach((k, i) => {
+        const cx = M + i * (cardW + 6);
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(226, 232, 240);
+        doc.roundedRect(cx, y, cardW, 56, 5, 5, 'FD');
+        doc.setTextColor(100, 116, 139);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.text(k[0].toUpperCase(), cx + 8, y + 15);
+        doc.setTextColor(15, 23, 42);
+        doc.setFontSize(12);
+        doc.text(k[1], cx + 8, y + 33);
+        doc.setTextColor(71, 85, 105);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.text(k[2], cx + 8, y + 47);
+      });
+      y += 74;
+
+      // Section 2: HV Battery BMS (if Hybrid)
+      if (state.hvBms) {
+        const hb = state.hvBms;
+        addSectionTitle('2. High-Voltage Hybrid Battery Pack (BECM 7E4)');
+        const hvTemp = imp ? `${Math.round(hb.tempMaxC * 9 / 5 + 32)} °F` : `${hb.tempMaxC} °C`;
+        const hvCards = [
+          ['State of Charge', `${hb.socPct.toFixed(1)}%`, 'Healthy operating window'],
+          ['Pack Voltage / Amps', `${hb.packV.toFixed(1)} V`, `Current: ${hb.currentA >= 0 ? '+' : ''}${hb.currentA.toFixed(1)} A`],
+          ['Cell Balance', `${hb.cellDeltaMv} mV delta`, `${hb.cellMinV.toFixed(2)}V – ${hb.cellMaxV.toFixed(2)}V`],
+          ['Module Temp', hvTemp, hb.cellDeltaMv <= 40 ? 'Status: Balanced' : 'Status: Check Cells']
+        ];
+        hvCards.forEach((k, i) => {
+          const cx = M + i * (cardW + 6);
+          doc.setFillColor(236, 253, 245);
+          doc.setDrawColor(167, 243, 208);
+          doc.roundedRect(cx, y, cardW, 54, 5, 5, 'FD');
+          doc.setTextColor(6, 95, 70);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7.5);
+          doc.text(k[0].toUpperCase(), cx + 8, y + 15);
+          doc.setTextColor(15, 23, 42);
+          doc.setFontSize(12);
+          doc.text(k[1], cx + 8, y + 32);
+          doc.setTextColor(51, 65, 85);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7.5);
+          doc.text(k[2], cx + 8, y + 46);
+        });
+        y += 72;
+      }
+
+      // Section 3: Diagnostic Trouble Codes
+      addSectionTitle(state.hvBms ? '3. Diagnostic Trouble Codes (Modes 03 / 07 / 0A)' : '2. Diagnostic Trouble Codes (Modes 03 / 07 / 0A)');
+      if (!dtcCount) {
+        doc.setFillColor(240, 253, 244);
+        doc.setDrawColor(187, 247, 208);
+        doc.roundedRect(M, y, W - M * 2, 28, 5, 5, 'FD');
+        doc.setTextColor(21, 128, 61);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.text('PASS — No Stored, Pending, or Permanent Diagnostic Trouble Codes detected.', M + 12, y + 17);
+        y += 42;
+      } else {
+        state.dtcs.forEach(d => {
+          if (y > H - 60) { doc.addPage(); y = 48; }
+          doc.setTextColor(185, 28, 28);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(9.5);
+          doc.text(`${d.code}  [${d.type}]`, M, y);
+          doc.setTextColor(51, 65, 85);
+          doc.setFont('helvetica', 'normal');
+          doc.text(String(d.desc || '').slice(0, 80), M + 120, y);
+          y += 16;
+        });
+        y += 10;
+      }
+
+      // Section 4: ECU Topology Map
+      const ecuSecNum = state.hvBms ? 4 : 3;
+      addSectionTitle(`${ecuSecNum}. CAN Network ECU Topology (${onlineEcus.length} Online Modules)`);
+      if (!onlineEcus.length) {
+        doc.setTextColor(100, 116, 139);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text('Run ECU Topology Auto-Scan while connected to populate module Part #s and status.', M, y);
+        y += 22;
+      } else {
+        doc.setFillColor(241, 245, 249);
+        doc.rect(M, y - 10, W - M * 2, 18, 'F');
+        doc.setTextColor(51, 65, 85);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.text('ECU ID', M + 6, y + 2);
+        doc.text('MODULE NAME', M + 65, y + 2);
+        doc.text('BUS GROUP', M + 250, y + 2);
+        doc.text('STATUS', M + 340, y + 2);
+        doc.text('OEM PART / SW', M + 420, y + 2);
+        y += 18;
+        onlineEcus.forEach(e => {
+          if (y > H - 55) { doc.addPage(); y = 48; }
+          doc.setTextColor(15, 23, 42);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8.5);
+          doc.text(String(e.hdr), M + 6, y);
+          doc.setFont('helvetica', 'normal');
+          doc.text(String(e.name).slice(0, 32), M + 65, y);
+          doc.text(String(e.group || ''), M + 250, y);
+          doc.setTextColor(e.status === 'ok' ? 21 : 180, e.status === 'ok' ? 128 : 83, e.status === 'ok' ? 61 : 9);
+          doc.text(e.status === 'ok' ? 'ONLINE OK' : `${e.dtcCount} FAULT(s)`, M + 340, y);
+          doc.setTextColor(71, 85, 105);
+          doc.text(String(e.part || '--').slice(0, 22), M + 420, y);
+          y += 15;
+        });
+        y += 10;
+      }
+
+      // Section 5: Deep OBDb Sensor Readings (if any were polled in Topology drill-down)
+      const deepKeys = Object.keys(topoNav.lastValues || {}).filter(k => topoNav.lastValues[k]?.val !== null);
+      if (deepKeys.length) {
+        addSectionTitle(`${ecuSecNum + 1}. Deep Module Sensor Readings (${deepKeys.length} Captured)`);
+        deepKeys.slice(0, 24).forEach(k => {
+          if (y > H - 50) { doc.addPage(); y = 48; }
+          const lv = topoNav.lastValues[k];
+          doc.setTextColor(15, 23, 42);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8.5);
+          doc.text(k, M + 6, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(String(lv.formatted || '--'), W - M - 6, y, { align: 'right' });
+          y += 14;
+        });
+      }
+
+      // Footer
+      doc.setTextColor(148, 163, 184);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.text('Generated by OBD2 Pro Link • Vgate iCar Pro BLE Fleet Diagnostics', M, H - 24);
+
+      const safeVin = (state.detectedVin || 'Vehicle').replace(/[^A-Z0-9]/gi, '');
+      const dateSlug = new Date().toISOString().slice(0, 10);
+      const fileName = `OBD2_Health_Report_${safeVin}_${dateSlug}.pdf`;
+
+      if (isAndroidNative() && typeof window.AndroidObd.savePdfBase64 === 'function') {
+        const dataUri = doc.output('datauristring');
+        const b64 = dataUri.split(',')[1] || '';
+        window.AndroidObd.savePdfBase64(fileName, b64);
+        showToast(`Saved ${fileName} to Downloads!`);
+      } else {
+        doc.save(fileName);
+        showToast(`Downloaded ${fileName}`);
+      }
+    }
+
     function goTopoBack() {
       stopTopoLiveStream();
       if (topoNav.level === 3) { topoNav.level = 2; topoNav.category = null; }
@@ -1036,6 +1327,31 @@
     }
 
     async function pollCategorySignals(once = true) {
+      if (state.demoActive) {
+        const ecu = topoNav.ecu, cat = topoNav.category;
+        if (!ecu || !cat) return;
+        const items = getEcuCategories(state.vehicle.id, ecu.hdr)[cat] || [];
+        items.forEach((it, idx) => {
+          const u = (it.sig.u || '').toLowerCase();
+          let v = 12.5;
+          if (u === 'noyes' || u === 'offon') v = idx % 3 === 0 ? 1 : 0;
+          else if (u === 'celsius') v = 24 + (idx % 7) * 6 + Math.random() * 2;
+          else if (u === 'kilopascal') v = 4200 + Math.random() * 650;
+          else if (u === 'volts') v = it.sig.n.toLowerCase().includes('cell') ? 3.65 + (Math.random() * 0.03) : (it.sig.n.toLowerCase().includes('pack') ? 235.2 : 13.8);
+          else if (u === 'amps') v = -4.5 + Math.random() * 12;
+          else if (u === 'ma') v = 0.04 + Math.random() * 0.12;
+          else if (u === 'percent') v = 35 + (idx * 9) % 55 + Math.random() * 3;
+          else if (u === 'psi') v = 34.5 + (idx % 4) * 0.4;
+          else if (u === 'rpm') v = 1450 + Math.random() * 400;
+          else if (u === 'kilometersperhour') v = 58 + Math.random() * 4;
+          else if (u === 'g/s') v = 1.45 + Math.random() * 0.4;
+          else v = Math.round((10 + idx * 3.7 + Math.random() * 2) * 10) / 10;
+          topoNav.lastValues[it.sig.id] = { val: v, formatted: formatObdbValue(v, it.sig.u), ts: 'DEMO' };
+        });
+        renderCategorySignalsList();
+        if (once) showToast(`Demo: simulated ${items.length} ${cat} sensor(s)`);
+        return;
+      }
       if (state.mode === 'disconnected') { showToast('Connect to IOS-Vlink first.'); return; }
       const ecu = topoNav.ecu;
       const cat = topoNav.category;
@@ -1290,6 +1606,8 @@
       vehicleIdentified: false,
       iceSteadyCount: 0,
       hvBms: null,
+      demoActive: false,
+      demoTimer: null,
       detectedVin: '',
       telemetry: {
         rpm: null, speedKmh: null, throttle: null, load: null,
@@ -1500,7 +1818,8 @@
       const hasExtra = Boolean(extra.discovery || extra.dtcs || extra.rawReplies);
       if (!rows.length && !hasExtra && state.driveSync.metaSent) return false;
       if (!state.driveSync.sessionId) state.driveSync.sessionId = makeSessionId();
-      const payload = { sessionId: state.driveSync.sessionId, vehicle: state.vehicle.name, rows, ...extra };
+      const vinPrefix = state.detectedVin ? `${state.detectedVin}_` : '';
+      const payload = { sessionId: state.driveSync.sessionId, vehicle: `${vinPrefix}${state.vehicle.name}`, vin: state.detectedVin || '', rows, ...extra };
       if (!state.driveSync.metaSent) {
         payload.meta = { device: state.ble.device?.name || state.mode, vin: state.detectedVin, vehicle: state.vehicle, units: state.units };
         state.driveSync.metaSent = true;
@@ -1558,6 +1877,7 @@
     }
 
     async function flushDriveSync(extra = {}) {
+      if (state.demoActive) return;
       const url = (state.driveSync.url || '').trim();
       if (!url) return;
       enqueueCurrentBatch(extra);
@@ -2622,7 +2942,7 @@
 
       document.getElementById('connectBleBtn').addEventListener('click', connectBLE);
       document.getElementById('hwReinitBtn').addEventListener('click', initElmProtocol);
-      document.getElementById('homePrintReportBtn').addEventListener('click', () => window.print());
+      document.getElementById('homePrintReportBtn').addEventListener('click', () => generateVehicleHealthPdf());
       document.getElementById('runTopologyScanBtn').addEventListener('click', runFullTopologyScan);
       document.getElementById('scanImBtn').addEventListener('click', runImReadinessScan);
       document.getElementById('scanFreezeBtn').addEventListener('click', runFreezeFrameScan);
@@ -2672,6 +2992,7 @@
       });
       document.getElementById('clearDynoBtn').addEventListener('click', () => { state.dyno.samples = []; state.dyno.peakVe = 0; renderDynoChart(); });
 
+      document.getElementById('demoToggleBtn')?.addEventListener('click', toggleDemoMode);
       document.getElementById('topoBackBtn')?.addEventListener('click', goTopoBack);
       document.getElementById('recheckDriveHealthBtn').addEventListener('click', async () => {
         showToast('Checking Google Drive endpoint...');
@@ -2802,6 +3123,7 @@
       setInterval(() => {
         try {
           const snap = JSON.parse(window.AndroidObd.getStateJson());
+          if (state.demoActive) return;
           const running = Boolean(snap.running);
           state.mode = running ? 'ble' : 'disconnected';
 
