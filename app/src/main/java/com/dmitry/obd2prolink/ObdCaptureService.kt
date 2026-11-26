@@ -166,6 +166,21 @@ class ObdCaptureService : Service() {
             var lastStft: Double? = null
             var lastLtft: Double? = null
             var lastVolt: Double? = null
+            var lastMapKpa: Double? = null
+            var lastTiming: Double? = null
+            var lastFuelRailPsi: Double? = null
+            var lastO2Lambda: Double? = null
+            var lastO2Ma: Double? = null
+            var lastCat1F: Double? = null
+            var lastCat2F: Double? = null
+            var lastEgrPct: Double? = null
+            var lastEvapPurgePct: Double? = null
+            var lastEvapVaporKpa: Double? = null
+            var lastFuelLevelPct: Double? = null
+            var lastAmbientF: Double? = null
+            var lastBaroKpa: Double? = null
+            var lastActualTqPct: Double? = null
+            var lastFuelRateGs: Double? = null
 
             while (currentCoroutineContext().isActive && ble.isConnected && System.currentTimeMillis() < endAtMs) {
                 val now = System.currentTimeMillis()
@@ -178,6 +193,7 @@ class ObdCaptureService : Service() {
                 val spd = ObdDecoders.decodeSpeedMph(ble.sendCommand("010D", 1500))
                 val load = ObdDecoders.decodeLoadPct(ble.sendCommand("0104", 1500))
                 val thr = ObdDecoders.decodeThrottlePct(ble.sendCommand("0111", 1500))
+                val pedalD = ObdDecoders.decodePct(ble.sendCommand("0149", 1200), "49")
                 val maf = if ((rpm ?: 0.0) > 400.0) ObdDecoders.decodeMafGs(ble.sendCommand("0110", 1500)) else null
 
                 if (cycle > 0 && cycle % 25 == 0 && detectedVin.startsWith("KMH")) {
@@ -196,6 +212,25 @@ class ObdCaptureService : Service() {
                     lastVolt = ObdDecoders.decodeControlVoltage(ble.sendCommand("0142", 1500))
                         ?: ObdDecoders.decodeAtrv(ble.sendCommand("ATRV", 1500))
                         ?: lastVolt
+                    lastMapKpa = ObdDecoders.decodeMapKpa(ble.sendCommand("010B", 1200)) ?: lastMapKpa
+                    lastTiming = ObdDecoders.decodeTimingDeg(ble.sendCommand("010E", 1200)) ?: lastTiming
+                    lastFuelRailPsi = ObdDecoders.decodeFuelRailPsi(ble.sendCommand("0159", 1200)) ?: lastFuelRailPsi
+                    ObdDecoders.decodeO2LambdaAndMa(ble.sendCommand("0134", 1200))?.let {
+                        lastO2Lambda = it.first
+                        lastO2Ma = it.second
+                    }
+                    lastActualTqPct = ObdDecoders.decodeActualTorquePct(ble.sendCommand("0162", 1200)) ?: lastActualTqPct
+                    lastFuelRateGs = ObdDecoders.decodeFuelRateGs(ble.sendCommand("019D", 1200)) ?: lastFuelRateGs
+                }
+                if (cycle % 15 == 0) {
+                    lastCat1F = ObdDecoders.decodeCatTempF(ble.sendCommand("013C", 1200), "3C") ?: lastCat1F
+                    lastCat2F = ObdDecoders.decodeCatTempF(ble.sendCommand("013E", 1200), "3E") ?: lastCat2F
+                    lastEgrPct = ObdDecoders.decodePct(ble.sendCommand("012C", 1200), "2C") ?: lastEgrPct
+                    lastEvapPurgePct = ObdDecoders.decodePct(ble.sendCommand("012E", 1200), "2E") ?: lastEvapPurgePct
+                    lastEvapVaporKpa = ObdDecoders.decodeEvapVaporKpa(ble.sendCommand("0153", 1200)) ?: lastEvapVaporKpa
+                    lastFuelLevelPct = ObdDecoders.decodePct(ble.sendCommand("012F", 1200), "2F") ?: lastFuelLevelPct
+                    lastAmbientF = ObdDecoders.decodeAmbientF(ble.sendCommand("0146", 1200)) ?: lastAmbientF
+                    lastBaroKpa = ObdDecoders.decodeBaroKpa(ble.sendCommand("0133", 1200)) ?: lastBaroKpa
                 }
 
                 val row = JSONObject().apply {
@@ -212,6 +247,31 @@ class ObdCaptureService : Service() {
                     lastStft?.let { put("stft", Math.round(it * 10.0) / 10.0) }
                     lastLtft?.let { put("ltft", Math.round(it * 10.0) / 10.0) }
                     lastVolt?.let { put("volts", Math.round(it * 100.0) / 100.0) }
+                    if (pedalD != null) put("pedalD", Math.round(pedalD * 10.0) / 10.0)
+                    lastMapKpa?.let { put("mapKpa", Math.round(it * 10.0) / 10.0) }
+                    lastTiming?.let { put("timingDeg", Math.round(it * 10.0) / 10.0) }
+                    lastFuelRailPsi?.let { put("fuelRailPsi", Math.round(it * 10.0) / 10.0) }
+                    lastO2Lambda?.let { put("o2Lambda", Math.round(it * 1000.0) / 1000.0) }
+                    lastO2Ma?.let { put("o2CurrentMa", Math.round(it * 100.0) / 100.0) }
+                    lastCat1F?.let { put("catTemp1F", Math.round(it * 10.0) / 10.0) }
+                    lastCat2F?.let { put("catTemp2F", Math.round(it * 10.0) / 10.0) }
+                    lastEgrPct?.let { put("egrPct", Math.round(it * 10.0) / 10.0) }
+                    lastEvapPurgePct?.let { put("evapPurgePct", Math.round(it * 10.0) / 10.0) }
+                    lastEvapVaporKpa?.let { put("evapVaporKpa", Math.round(it * 100.0) / 100.0) }
+                    lastFuelLevelPct?.let { put("fuelLevelPct", Math.round(it * 10.0) / 10.0) }
+                    lastAmbientF?.let { put("ambientF", Math.round(it * 10.0) / 10.0) }
+                    lastBaroKpa?.let { put("baroKpa", Math.round(it * 10.0) / 10.0) }
+                    lastActualTqPct?.let { put("actualTqPct", Math.round(it * 10.0) / 10.0) }
+                    lastFuelRateGs?.let { put("fuelRateGs", Math.round(it * 100.0) / 100.0) }
+                    if (hvBmsJson.isNotEmpty()) {
+                        runCatching {
+                            val hb = JSONObject(hvBmsJson)
+                            put("hvSoc", hb.optDouble("socPct"))
+                            put("hvPackV", hb.optDouble("packV"))
+                            put("hvPackA", hb.optDouble("currentA"))
+                            put("hvCellDeltaMv", hb.optLong("cellDeltaMv"))
+                        }
+                    }
                 }
                 liveSnapshotJson = row.toString()
                 pendingRows.add(row)
