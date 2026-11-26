@@ -331,7 +331,8 @@ class ObdCaptureService : Service() {
     ) {
         val payload = JSONObject().apply {
             put("sessionId", sessionId)
-            put("vehicle", vehicleName)
+            put("vehicle", if (vin.isNotEmpty()) "${vin}_${vehicleName}" else vehicleName)
+            put("vin", vin)
             put("rows", JSONArray(rows))
             if (includeMeta) {
                 put("meta", JSONObject().apply {
