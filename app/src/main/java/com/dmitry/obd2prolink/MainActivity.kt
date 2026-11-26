@@ -222,6 +222,45 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+
+        @JavascriptInterface
+        fun emailPdfBase64(fileName: String, base64Data: String, subject: String, body: String) {
+            uiScope.launch(Dispatchers.IO) {
+                try {
+                    val bytes = Base64.decode(base64Data, Base64.DEFAULT)
+                    val resolver = contentResolver
+                    val cv = ContentValues().apply {
+                        put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                        put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                        }
+                    }
+                    val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv)
+                    if (uri != null) {
+                        resolver.openOutputStream(uri)?.use { it.write(bytes) }
+                        withContext(Dispatchers.Main) {
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "application/pdf"
+                                putExtra(Intent.EXTRA_SUBJECT, subject)
+                                putExtra(Intent.EXTRA_TEXT, body)
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            val chooser = Intent.createChooser(sendIntent, "Email Health Report PDF")
+                            runCatching { startActivity(chooser) }.onFailure {
+                                Toast.makeText(this@MainActivity, "No email app found (PDF saved to Downloads)", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@MainActivity, "Email PDF failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
+
         @JavascriptInterface
         fun getStateJson(): String {
             val (qBatches, qRows) = db.countPendingBatches()
