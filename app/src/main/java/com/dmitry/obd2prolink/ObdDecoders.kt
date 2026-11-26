@@ -59,6 +59,44 @@ object ObdDecoders {
     fun decodeControlVoltage(raw: String): Double? =
         findPidBytes(raw, "41", "42", 2)?.let { ((it[0] * 256) + it[1]) / 1000.0 }
 
+
+    fun decodeMapKpa(raw: String): Double? =
+        findPidBytes(raw, "41", "0B", 1)?.let { it[0].toDouble() }
+
+    fun decodeTimingDeg(raw: String): Double? =
+        findPidBytes(raw, "41", "0E", 1)?.let { (it[0] / 2.0) - 64.0 }
+
+    fun decodeFuelRailPsi(raw: String): Double? =
+        findPidBytes(raw, "41", "59", 2)?.let { ((it[0] * 256) + it[1]) * 10.0 * 0.145038 }
+
+    fun decodeO2LambdaAndMa(raw: String): Pair<Double, Double>? =
+        findPidBytes(raw, "41", "34", 4)?.let {
+            val lam = ((it[0] * 256) + it[1]) * 2.0 / 65536.0
+            val ma = (((it[2] * 256) + it[3]) / 256.0) - 128.0
+            Pair(lam, ma)
+        }
+
+    fun decodeCatTempF(raw: String, pidHex: String): Double? =
+        findPidBytes(raw, "41", pidHex, 2)?.let { ((((it[0] * 256) + it[1]) / 10.0) - 40.0) * 9.0 / 5.0 + 32.0 }
+
+    fun decodePct(raw: String, pidHex: String): Double? =
+        findPidBytes(raw, "41", pidHex, 1)?.let { (it[0] * 100.0) / 255.0 }
+
+    fun decodeAmbientF(raw: String): Double? =
+        findPidBytes(raw, "41", "46", 1)?.let { ((it[0] - 40) * 9.0 / 5.0) + 32.0 }
+
+    fun decodeBaroKpa(raw: String): Double? =
+        findPidBytes(raw, "41", "33", 1)?.let { it[0].toDouble() }
+
+    fun decodeEvapVaporKpa(raw: String): Double? =
+        findPidBytes(raw, "41", "53", 2)?.let { ((it[0] * 256) + it[1]) / 200.0 }
+
+    fun decodeActualTorquePct(raw: String): Double? =
+        findPidBytes(raw, "41", "62", 1)?.let { (it[0] - 125).toDouble() }
+
+    fun decodeFuelRateGs(raw: String): Double? =
+        findPidBytes(raw, "41", "9D", 2)?.let { ((it[0] * 256) + it[1]) * 0.02 }
+
     fun decodeAtrv(raw: String): Double? {
         val m = Regex("(\\d+\\.\\d+)\\s*V", RegexOption.IGNORE_CASE).find(raw)
         return m?.groupValues?.get(1)?.toDoubleOrNull()
