@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#080c15" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
-  <title>OBD2 Pro Link v3.3 — ICON T10 Deep Diagnostics</title>
+  <title>OBD2 Pro Link v3.4 — ICON T10 Deep Diagnostics</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -63,31 +63,26 @@
   <!-- Compact Sticky Top Bar -->
   <header class="sticky top-0 z-40 border-b border-slate-800/90 bg-[#0b1220]/95 backdrop-blur-md">
     <div class="max-w-7xl mx-auto px-3 sm:px-5 py-2 space-y-1.5">
-      <!-- Row 1: Brand + Crisp Single-Line Action Buttons -->
+      <!-- Row 1: Full Brand Title + Primary Connect Action (Never Clips!) -->
       <div class="flex items-center justify-between gap-2">
         <div class="flex items-center gap-2 min-w-0">
           <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-cyan-500/20">
-            <i data-lucide="activity" class="w-4 h-4 text-white"></i>
+            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           </div>
-          <h1 class="text-sm sm:text-base font-bold tracking-tight text-white whitespace-nowrap">OBD2 Pro Link</h1>
+          <div class="min-w-0">
+            <h1 class="text-sm sm:text-base font-bold tracking-tight text-white whitespace-nowrap leading-tight">OBD2 Pro Link</h1>
+            <p id="activeVehicleLabel" class="text-[10px] sm:text-[11px] text-slate-400 truncate">Not Connected — Auto-VIN Ready</p>
+          </div>
         </div>
-        <div class="flex items-center gap-1.5 shrink-0">
-          <button id="unitToggleBtn" type="button" class="px-2 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 whitespace-nowrap transition">
-            MPH/°F
-          </button>
-          <button id="demoToggleBtn" type="button" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 whitespace-nowrap transition">
-            Demo
-          </button>
-          <button id="connectBleBtn" type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm shadow-cyan-500/25 whitespace-nowrap transition">
-            <i data-lucide="bluetooth" class="w-3.5 h-3.5"></i>
-            <span id="connectBleBtnText">Connect</span>
-          </button>
-        </div>
+        <button id="connectBleBtn" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm shadow-cyan-500/25 whitespace-nowrap shrink-0 transition">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"/></svg>
+          <span id="connectBleBtnText">Connect</span>
+        </button>
       </div>
 
-      <!-- Row 2: Clean Status Strip (Zero Overlap on Narrow Phones) -->
-      <div class="flex items-center justify-between gap-2 flex-wrap">
-        <div class="flex items-center gap-1.5 flex-wrap">
+      <!-- Row 2: Status Pills (left) + Compact Utility Controls (right) -->
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 min-w-0 overflow-x-auto">
           <span id="connBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-300 border border-slate-700 whitespace-nowrap">
             <span id="connDot" class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
             <span id="connText">Disconnected</span>
@@ -96,7 +91,14 @@
             <span id="driveSyncText">Drive: Auto</span>
           </span>
         </div>
-        <p id="activeVehicleLabel" class="text-[11px] text-slate-400 truncate max-w-[220px] sm:max-w-md">Not Connected — Auto-VIN Ready</p>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="unitToggleBtn" type="button" class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 whitespace-nowrap transition">
+            MPH/°F
+          </button>
+          <button id="demoToggleBtn" type="button" class="px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 whitespace-nowrap transition">
+            Demo
+          </button>
+        </div>
       </div>
     </div>
   </header>
@@ -173,10 +175,10 @@
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
               <button id="homePrintReportBtn" type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
-                <i data-lucide="file-text" class="w-3.5 h-3.5"></i><span>PDF</span>
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span>PDF</span>
               </button>
               <button id="homeEmailReportBtn" type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-indigo-600/80 hover:bg-indigo-500 text-white border border-indigo-400/40">
-                <i data-lucide="mail" class="w-3.5 h-3.5"></i><span>Email PDF</span>
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg><span>Email PDF</span>
               </button>
             </div>
           </div>
@@ -1090,18 +1092,59 @@
     }
 
 
-    function generateVehicleHealthPdf(mode = 'save') {
-      if (!window.jspdf || !window.jspdf.jsPDF) {
-        showToast('PDF library still loading — try again in a second.');
-        return;
+    // 100% Offline, Zero-CDN Pure-JS PDF 1.4 Vector Builder (Executive Dark Header + Crisp Tables)
+    function buildOfflinePdfBase64(drawFn) {
+      const W = 612, H = 792;
+      const ops = [];
+      const esc = (s) => String(s || '').replace(/[^\x20-\x7E]/g, ' ').replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+      const rgb = (r, g, b) => `${(r/255).toFixed(3)} ${(g/255).toFixed(3)} ${(b/255).toFixed(3)}`;
+      const api = {
+        W, H,
+        fillRect(x, yTop, w, h, r, g, b) {
+          ops.push(`q ${rgb(r,g,b)} rg ${x.toFixed(1)} ${(H - yTop - h).toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)} re f Q`);
+        },
+        strokeRect(x, yTop, w, h, r, g, b, lw = 0.8) {
+          ops.push(`q ${lw} w ${rgb(r,g,b)} RG ${x.toFixed(1)} ${(H - yTop - h).toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)} re S Q`);
+        },
+        line(x1, y1, x2, y2, r, g, b, lw = 0.7) {
+          ops.push(`q ${lw} w ${rgb(r,g,b)} RG ${x1.toFixed(1)} ${(H - y1).toFixed(1)} m ${x2.toFixed(1)} ${(H - y2).toFixed(1)} l S Q`);
+        },
+        text(str, x, yTop, size = 10, bold = false, r = 15, g = 23, b = 42) {
+          const font = bold ? '/F2' : '/F1';
+          ops.push(`BT ${font} ${size} Tf ${rgb(r,g,b)} rg 1 0 0 1 ${x.toFixed(1)} ${(H - yTop).toFixed(1)} Tm (${esc(str)}) Tj ET`);
+        }
+      };
+      drawFn(api);
+      const stream = ops.join('\n');
+      const objs = [
+        '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n',
+        '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n',
+        `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>\nendobj\n`,
+        '4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n',
+        '5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj\n',
+        `6 0 obj\n<< /Length ${stream.length} >>\nstream\n${stream}\nendstream\nendobj\n`
+      ];
+      let pdf = '%PDF-1.4\n';
+      const offsets = [0];
+      for (const o of objs) {
+        offsets.push(pdf.length);
+        pdf += o;
       }
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
-      const W = doc.internal.pageSize.getWidth();
-      const H = doc.internal.pageSize.getHeight();
-      const M = 40;
-      let y = 0;
+      const xrefPos = pdf.length;
+      pdf += `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+      for (let i = 1; i <= objs.length; i++) {
+        pdf += String(offsets[i]).padStart(10, '0') + ' 00000 n \n';
+      }
+      pdf += `trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF\n`;
+      const bytes = new Uint8Array(pdf.length);
+      for (let i = 0; i < pdf.length; i++) bytes[i] = pdf.charCodeAt(i) & 0xFF;
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return { base64: btoa(bin), blob: new Blob([bytes], { type: 'application/pdf' }) };
+    }
 
+    function generateVehicleHealthPdf(mode = 'save') {
+      const M = 38;
       const isDemo = Boolean(state.demoActive);
       const vehicleTitle = state.vehicleIdentified ? state.vehicle.name : 'No Vehicle Connected';
       const vinStr = state.detectedVin || 'Not Read';
@@ -1109,226 +1152,160 @@
       const dtcCount = state.dtcs ? state.dtcs.length : 0;
       const onlineEcus = (state.topology || []).filter(e => e.status === 'ok' || e.status === 'fault');
       const imp = state.units === 'imperial';
-
-      // Dark Executive Header Banner
-      doc.setFillColor(11, 18, 32);
-      doc.rect(0, 0, W, 94, 'F');
-      doc.setFillColor(6, 182, 212);
-      doc.rect(0, 94, W, 3, 'F');
-
-      doc.setTextColor(6, 182, 212);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.text(isDemo ? 'OBD2 PRO LINK  •  DEMO PREVIEW REPORT' : 'OBD2 PRO LINK  •  VEHICLE DIAGNOSTIC HEALTH REPORT', M, 28);
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(18);
-      doc.text(vehicleTitle, M, 52);
-
-      doc.setTextColor(148, 163, 184);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9.5);
-      doc.text(`VIN: ${vinStr}   |   Generated: ${nowStr}`, M, 72);
-
-      // Verdict Pill (top right)
-      const pillColor = dtcCount === 0 ? [16, 185, 129] : [239, 68, 68];
-      doc.setFillColor(pillColor[0], pillColor[1], pillColor[2]);
-      doc.roundedRect(W - M - 132, 30, 132, 28, 6, 6, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10);
-      doc.text(dtcCount === 0 ? 'HEALTHY • 0 DTCs' : `ATTENTION • ${dtcCount} DTC(s)`, W - M - 66, 48, { align: 'center' });
-
-      y = 120;
-
-      const addSectionTitle = (title) => {
-        if (y > H - 90) { doc.addPage(); y = 48; }
-        doc.setTextColor(15, 23, 42);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(11.5);
-        doc.text(title, M, y);
-        doc.setDrawColor(203, 213, 225);
-        doc.line(M, y + 5, W - M, y + 5);
-        y += 20;
-      };
-
-      // Section 1: Key Telemetry & Charging Summary
-      addSectionTitle('1. Powertrain, Battery & Session Telemetry');
       const t = state.telemetry || {};
       const mm = state.minMax || {};
       const fmtNum = (v, unit = '', dec = 1) => (v === null || v === undefined || isNaN(v)) ? '--' : `${Number(v).toFixed(dec)}${unit}`;
       const coolVal = t.coolantC !== null && t.coolantC !== undefined
-        ? (imp ? `${(t.coolantC * 9 / 5 + 32).toFixed(0)} °F` : `${t.coolantC.toFixed(0)} °C`) : '--';
+        ? (imp ? `${(t.coolantC * 9 / 5 + 32).toFixed(0)} F` : `${t.coolantC.toFixed(0)} C`) : '--';
       const spdVal = t.speedKmh !== null && t.speedKmh !== undefined
         ? (imp ? `${(t.speedKmh * 0.621371).toFixed(0)} MPH` : `${t.speedKmh.toFixed(0)} km/h`) : '--';
-      const vMin = mm.voltage?.min !== undefined ? `${mm.voltage.min.toFixed(2)} V` : '--';
-      const vMax = mm.voltage?.max !== undefined ? `${mm.voltage.max.toFixed(2)} V` : '--';
+      const vMin = mm.voltage?.min !== undefined ? `${mm.voltage.min.toFixed(2)}V` : '--';
+      const vMax = mm.voltage?.max !== undefined ? `${mm.voltage.max.toFixed(2)}V` : '--';
 
-      const kpis = [
-        ['12V Bus Voltage', `${fmtNum(t.voltage, ' V', 2)}`, `Min ${vMin} / Max ${vMax}`],
-        ['Engine RPM / Load', `${t.rpm !== null && t.rpm !== undefined ? Math.round(t.rpm) : '--'} RPM`, `Load: ${fmtNum(t.load, '%', 0)} | VE: ${fmtNum(t.ve, '%', 0)}`],
-        ['Coolant Temp', coolVal, `Speed: ${spdVal}`],
-        ['Fuel Trims (B1)', `STFT ${fmtNum(t.stft, '%', 1)}`, `LTFT ${fmtNum(t.ltft, '%', 1)}`]
-      ];
-      const cardW = (W - M * 2 - 18) / 4;
-      kpis.forEach((k, i) => {
-        const cx = M + i * (cardW + 6);
-        doc.setFillColor(248, 250, 252);
-        doc.setDrawColor(226, 232, 240);
-        doc.roundedRect(cx, y, cardW, 56, 5, 5, 'FD');
-        doc.setTextColor(100, 116, 139);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(7.5);
-        doc.text(k[0].toUpperCase(), cx + 8, y + 15);
-        doc.setTextColor(15, 23, 42);
-        doc.setFontSize(12);
-        doc.text(k[1], cx + 8, y + 33);
-        doc.setTextColor(71, 85, 105);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(7.5);
-        doc.text(k[2], cx + 8, y + 47);
-      });
-      y += 74;
+      const { base64, blob } = buildOfflinePdfBase64((p) => {
+        // Dark Executive Header Banner
+        p.fillRect(0, 0, p.W, 92, 11, 18, 32);
+        p.fillRect(0, 92, p.W, 3, 6, 182, 212);
+        p.text(isDemo ? 'OBD2 PRO LINK  |  DEMO PREVIEW REPORT' : 'OBD2 PRO LINK  |  VEHICLE DIAGNOSTIC HEALTH REPORT', M, 28, 8.5, true, 6, 182, 212);
+        p.text(vehicleTitle, M, 52, 16, true, 255, 255, 255);
+        p.text(`VIN: ${vinStr}   |   Generated: ${nowStr}`, M, 72, 9, false, 148, 163, 184);
 
-      // Section 2: HV Battery BMS (if Hybrid)
-      if (state.hvBms) {
-        const hb = state.hvBms;
-        addSectionTitle('2. High-Voltage Hybrid Battery Pack (BECM 7E4)');
-        const hvTemp = imp ? `${Math.round(hb.tempMaxC * 9 / 5 + 32)} °F` : `${hb.tempMaxC} °C`;
-        const hvCards = [
-          ['State of Charge', `${hb.socPct.toFixed(1)}%`, 'Healthy operating window'],
-          ['Pack Voltage / Amps', `${hb.packV.toFixed(1)} V`, `Current: ${hb.currentA >= 0 ? '+' : ''}${hb.currentA.toFixed(1)} A`],
-          ['Cell Balance', `${hb.cellDeltaMv} mV delta`, `${hb.cellMinV.toFixed(2)}V – ${hb.cellMaxV.toFixed(2)}V`],
-          ['Module Temp', hvTemp, hb.cellDeltaMv <= 40 ? 'Status: Balanced' : 'Status: Check Cells']
+        // Verdict Badge
+        if (dtcCount === 0) {
+          p.fillRect(p.W - M - 128, 28, 128, 26, 16, 185, 129);
+          p.text('HEALTHY - 0 DTCs', p.W - M - 114, 45, 9.5, true, 255, 255, 255);
+        } else {
+          p.fillRect(p.W - M - 128, 28, 128, 26, 220, 38, 38);
+          p.text(`ATTENTION - ${dtcCount} DTC`, p.W - M - 114, 45, 9.5, true, 255, 255, 255);
+        }
+
+        let y = 118;
+        const sec = (title) => {
+          p.text(title, M, y, 11, true, 15, 23, 42);
+          p.line(M, y + 5, p.W - M, y + 5, 203, 213, 225);
+          y += 18;
+        };
+
+        // 1. Powertrain & Battery KPI Cards
+        sec('1. Powertrain, Battery & Session Telemetry');
+        const kpis = [
+          ['12V BUS VOLTAGE', fmtNum(t.voltage, ' V', 2), `Min ${vMin} / Max ${vMax}`],
+          ['ENGINE RPM / LOAD', `${t.rpm !== null && t.rpm !== undefined ? Math.round(t.rpm) : '--'} RPM`, `Load ${fmtNum(t.load, '%', 0)} | VE ${fmtNum(t.ve, '%', 0)}`],
+          ['COOLANT / SPEED', coolVal, `Speed: ${spdVal}`],
+          ['FUEL TRIMS (B1)', `STFT ${fmtNum(t.stft, '%', 1)}`, `LTFT ${fmtNum(t.ltft, '%', 1)}`]
         ];
-        hvCards.forEach((k, i) => {
-          const cx = M + i * (cardW + 6);
-          doc.setFillColor(236, 253, 245);
-          doc.setDrawColor(167, 243, 208);
-          doc.roundedRect(cx, y, cardW, 54, 5, 5, 'FD');
-          doc.setTextColor(6, 95, 70);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(7.5);
-          doc.text(k[0].toUpperCase(), cx + 8, y + 15);
-          doc.setTextColor(15, 23, 42);
-          doc.setFontSize(12);
-          doc.text(k[1], cx + 8, y + 32);
-          doc.setTextColor(51, 65, 85);
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(7.5);
-          doc.text(k[2], cx + 8, y + 46);
+        const cw = (p.W - M * 2 - 18) / 4;
+        kpis.forEach((k, i) => {
+          const cx = M + i * (cw + 6);
+          p.fillRect(cx, y, cw, 52, 248, 250, 252);
+          p.strokeRect(cx, y, cw, 52, 226, 232, 240);
+          p.text(k[0], cx + 8, y + 14, 7, true, 100, 116, 139);
+          p.text(k[1], cx + 8, y + 31, 11, true, 15, 23, 42);
+          p.text(k[2], cx + 8, y + 44, 7.5, false, 71, 85, 105);
         });
-        y += 72;
-      }
+        y += 68;
 
-      // Section 3: Diagnostic Trouble Codes
-      addSectionTitle(state.hvBms ? '3. Diagnostic Trouble Codes (Modes 03 / 07 / 0A)' : '2. Diagnostic Trouble Codes (Modes 03 / 07 / 0A)');
-      if (!dtcCount) {
-        doc.setFillColor(240, 253, 244);
-        doc.setDrawColor(187, 247, 208);
-        doc.roundedRect(M, y, W - M * 2, 28, 5, 5, 'FD');
-        doc.setTextColor(21, 128, 61);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9.5);
-        doc.text('PASS — No Stored, Pending, or Permanent Diagnostic Trouble Codes detected.', M + 12, y + 17);
-        y += 42;
-      } else {
-        state.dtcs.forEach(d => {
-          if (y > H - 60) { doc.addPage(); y = 48; }
-          doc.setTextColor(185, 28, 28);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(9.5);
-          doc.text(`${d.code}  [${d.type}]`, M, y);
-          doc.setTextColor(51, 65, 85);
-          doc.setFont('helvetica', 'normal');
-          doc.text(String(d.desc || '').slice(0, 80), M + 120, y);
-          y += 16;
-        });
-        y += 10;
-      }
+        // 2. Hybrid HV Battery BMS (if present)
+        if (state.hvBms) {
+          const hb = state.hvBms;
+          sec('2. High-Voltage Hybrid Battery Pack (BECM 7E4)');
+          const hvTemp = imp ? `${Math.round(hb.tempMaxC * 9 / 5 + 32)} F` : `${hb.tempMaxC} C`;
+          const hvCards = [
+            ['STATE OF CHARGE', `${hb.socPct.toFixed(1)}%`, 'Operating SOC'],
+            ['PACK VOLTAGE', `${hb.packV.toFixed(1)} V`, `Curr: ${hb.currentA >= 0 ? '+' : ''}${hb.currentA.toFixed(1)} A`],
+            ['CELL BALANCE', `${hb.cellDeltaMv} mV delta`, `${hb.cellMinV.toFixed(2)}V - ${hb.cellMaxV.toFixed(2)}V`],
+            ['MODULE TEMP', hvTemp, hb.cellDeltaMv <= 40 ? 'Status: Healthy' : 'Check Balance']
+          ];
+          hvCards.forEach((k, i) => {
+            const cx = M + i * (cw + 6);
+            p.fillRect(cx, y, cw, 50, 236, 253, 245);
+            p.strokeRect(cx, y, cw, 50, 167, 243, 208);
+            p.text(k[0], cx + 8, y + 14, 7, true, 6, 95, 70);
+            p.text(k[1], cx + 8, y + 30, 11, true, 15, 23, 42);
+            p.text(k[2], cx + 8, y + 43, 7.5, false, 51, 65, 85);
+          });
+          y += 66;
+        }
 
-      // Section 4: ECU Topology Map
-      const ecuSecNum = state.hvBms ? 4 : 3;
-      addSectionTitle(`${ecuSecNum}. CAN Network ECU Topology (${onlineEcus.length} Online Modules)`);
-      if (!onlineEcus.length) {
-        doc.setTextColor(100, 116, 139);
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.text('Run ECU Topology Auto-Scan while connected to populate module Part #s and status.', M, y);
-        y += 22;
-      } else {
-        doc.setFillColor(241, 245, 249);
-        doc.rect(M, y - 10, W - M * 2, 18, 'F');
-        doc.setTextColor(51, 65, 85);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8.5);
-        doc.text('ECU ID', M + 6, y + 2);
-        doc.text('MODULE NAME', M + 65, y + 2);
-        doc.text('BUS GROUP', M + 250, y + 2);
-        doc.text('STATUS', M + 340, y + 2);
-        doc.text('OEM PART / SW', M + 420, y + 2);
-        y += 18;
-        onlineEcus.forEach(e => {
-          if (y > H - 55) { doc.addPage(); y = 48; }
-          doc.setTextColor(15, 23, 42);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(8.5);
-          doc.text(String(e.hdr), M + 6, y);
-          doc.setFont('helvetica', 'normal');
-          doc.text(String(e.name).slice(0, 32), M + 65, y);
-          doc.text(String(e.group || ''), M + 250, y);
-          doc.setTextColor(e.status === 'ok' ? 21 : 180, e.status === 'ok' ? 128 : 83, e.status === 'ok' ? 61 : 9);
-          doc.text(e.status === 'ok' ? 'ONLINE OK' : `${e.dtcCount} FAULT(s)`, M + 340, y);
-          doc.setTextColor(71, 85, 105);
-          doc.text(String(e.part || '--').slice(0, 22), M + 420, y);
-          y += 15;
-        });
-        y += 10;
-      }
+        // 3. Diagnostic Trouble Codes
+        const dtcSec = state.hvBms ? 3 : 2;
+        sec(`${dtcSec}. Diagnostic Trouble Codes (Modes 03 / 07 / 0A)`);
+        if (!dtcCount) {
+          p.fillRect(M, y, p.W - M * 2, 24, 240, 253, 244);
+          p.strokeRect(M, y, p.W - M * 2, 24, 187, 247, 208);
+          p.text('PASS - No Stored, Pending, or Permanent Diagnostic Trouble Codes detected.', M + 10, y + 15, 9, true, 21, 128, 61);
+          y += 38;
+        } else {
+          state.dtcs.slice(0, 8).forEach(d => {
+            p.text(`${d.code} [${d.type}]`, M + 4, y + 10, 9, true, 185, 28, 28);
+            p.text(String(d.desc || '').slice(0, 68), M + 125, y + 10, 8.5, false, 51, 65, 85);
+            y += 15;
+          });
+          y += 10;
+        }
 
-      // Section 5: Deep OBDb Sensor Readings (if any were polled in Topology drill-down)
-      const deepKeys = Object.keys(topoNav.lastValues || {}).filter(k => topoNav.lastValues[k]?.val !== null);
-      if (deepKeys.length) {
-        addSectionTitle(`${ecuSecNum + 1}. Deep Module Sensor Readings (${deepKeys.length} Captured)`);
-        deepKeys.slice(0, 24).forEach(k => {
-          if (y > H - 50) { doc.addPage(); y = 48; }
-          const lv = topoNav.lastValues[k];
-          doc.setTextColor(15, 23, 42);
-          doc.setFont('helvetica', 'normal');
-          doc.setFontSize(8.5);
-          doc.text(k, M + 6, y);
-          doc.setFont('helvetica', 'bold');
-          doc.text(String(lv.formatted || '--'), W - M - 6, y, { align: 'right' });
-          y += 14;
-        });
-      }
+        // 4. ECU Topology Table
+        sec(`${dtcSec + 1}. CAN Network ECU Topology (${onlineEcus.length} Online Modules)`);
+        if (!onlineEcus.length) {
+          p.text('Connect to a vehicle and run Auto-Scan to populate ECU part numbers and status.', M + 4, y + 10, 8.5, false, 100, 116, 139);
+          y += 22;
+        } else {
+          p.fillRect(M, y, p.W - M * 2, 18, 241, 245, 249);
+          p.text('ECU', M + 6, y + 12, 8, true, 51, 65, 85);
+          p.text('MODULE NAME', M + 58, y + 12, 8, true, 51, 65, 85);
+          p.text('BUS', M + 250, y + 12, 8, true, 51, 65, 85);
+          p.text('STATUS', M + 325, y + 12, 8, true, 51, 65, 85);
+          p.text('OEM PART / SW', M + 410, y + 12, 8, true, 51, 65, 85);
+          y += 24;
+          onlineEcus.slice(0, 12).forEach(e => {
+            p.text(String(e.hdr), M + 6, y + 8, 8.5, true, 15, 23, 42);
+            p.text(String(e.name).slice(0, 32), M + 58, y + 8, 8.5, false, 15, 23, 42);
+            p.text(String(e.group || ''), M + 250, y + 8, 8.5, false, 71, 85, 105);
+            if (e.status === 'ok') p.text('ONLINE OK', M + 325, y + 8, 8.5, true, 21, 128, 61);
+            else p.text(`${e.dtcCount} FAULT`, M + 325, y + 8, 8.5, true, 180, 83, 9);
+            p.text(String(e.part || '--').slice(0, 20), M + 410, y + 8, 8, false, 71, 85, 105);
+            y += 15;
+          });
+          y += 10;
+        }
 
-      // Footer
-      doc.setTextColor(148, 163, 184);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.text('Generated by OBD2 Pro Link • Vgate iCar Pro BLE Fleet Diagnostics', M, H - 24);
+        // 5. Deep OBDb Sensor Readings (if polled)
+        const deepKeys = Object.keys(topoNav.lastValues || {}).filter(k => topoNav.lastValues[k]?.val !== null);
+        if (deepKeys.length && y < p.H - 70) {
+          sec(`${dtcSec + 2}. Deep Module Sensor Readings (${deepKeys.length} Captured)`);
+          deepKeys.slice(0, 10).forEach(k => {
+            if (y > p.H - 45) return;
+            const lv = topoNav.lastValues[k];
+            p.text(String(k).slice(0, 48), M + 6, y + 8, 8.5, false, 15, 23, 42);
+            p.text(String(lv.formatted || '--'), p.W - M - 80, y + 8, 8.5, true, 6, 95, 70);
+            y += 14;
+          });
+        }
+
+        // Footer
+        p.line(M, p.H - 34, p.W - M, p.H - 34, 226, 232, 240);
+        p.text('Generated by OBD2 Pro Link  |  Vgate iCar Pro BLE Fleet Diagnostics', M, p.H - 20, 8, false, 148, 163, 184);
+      });
 
       const safeVin = (state.detectedVin || 'Vehicle').replace(/[^A-Z0-9]/gi, '');
       const dateSlug = new Date().toISOString().slice(0, 10);
       const fileName = `OBD2_Health_Report_${safeVin}_${dateSlug}.pdf`;
-
-      const emailSubject = `Vehicle Health Report — ${vehicleTitle}${state.detectedVin ? ' (' + state.detectedVin + ')' : ''}`;
+      const emailSubject = `Vehicle Health Report - ${vehicleTitle}${state.detectedVin ? ' (' + state.detectedVin + ')' : ''}`;
       const emailBody = `Attached is the OBD2 Pro Link diagnostic health report for ${vehicleTitle} (VIN: ${vinStr}), generated ${nowStr}.\nSummary: ${dtcCount === 0 ? 'HEALTHY (0 DTCs)' : dtcCount + ' DTC(s) found'} | 12V Bus: ${fmtNum(t.voltage, ' V', 2)}${state.hvBms ? ' | HV Battery SOC: ' + state.hvBms.socPct.toFixed(1) + '%' : ''}.`;
 
       if (mode === 'email') {
         if (isAndroidNative() && typeof window.AndroidObd.emailPdfBase64 === 'function') {
-          const dataUri = doc.output('datauristring');
-          const b64 = dataUri.split(',')[1] || '';
-          window.AndroidObd.emailPdfBase64(fileName, b64, emailSubject, emailBody);
+          window.AndroidObd.emailPdfBase64(fileName, base64, emailSubject, emailBody);
           showToast('Opening email app with PDF attached...');
         } else {
-          const pdfBlob = doc.output('blob');
-          const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+          const pdfFile = new File([blob], fileName, { type: 'application/pdf' });
           if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
             navigator.share({ files: [pdfFile], title: emailSubject, text: emailBody }).catch(() => {});
           } else {
-            doc.save(fileName);
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = fileName;
+            a.click();
             window.location.href = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody + '\n\n(Attach downloaded file: ' + fileName + ')')}`;
             showToast(`Downloaded ${fileName} & opened email client`);
           }
@@ -1337,12 +1314,13 @@
       }
 
       if (isAndroidNative() && typeof window.AndroidObd.savePdfBase64 === 'function') {
-        const dataUri = doc.output('datauristring');
-        const b64 = dataUri.split(',')[1] || '';
-        window.AndroidObd.savePdfBase64(fileName, b64);
+        window.AndroidObd.savePdfBase64(fileName, base64);
         showToast(`Saved ${fileName} to Downloads!`);
       } else {
-        doc.save(fileName);
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fileName;
+        a.click();
         showToast(`Downloaded ${fileName}`);
       }
     }
