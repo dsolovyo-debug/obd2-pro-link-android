@@ -7,7 +7,11 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.content.ContentValues
+import android.os.Environment
 import android.os.PowerManager
+import android.provider.MediaStore
+import android.util.Base64
 import android.provider.Settings
 import android.webkit.JavascriptInterface
 import android.webkit.WebSettings
@@ -180,6 +184,40 @@ class MainActivity : AppCompatActivity() {
                 val safeId = JSONObject.quote(callbackId)
                 withContext(Dispatchers.Main) {
                     webView.evaluateJavascript("window.__onAndroidCmdReply($safeId, $safeReply);", null)
+                }
+            }
+        }
+
+
+        @JavascriptInterface
+        fun savePdfBase64(fileName: String, base64Data: String) {
+            uiScope.launch(Dispatchers.IO) {
+                try {
+                    val bytes = Base64.decode(base64Data, Base64.DEFAULT)
+                    val resolver = contentResolver
+                    val cv = ContentValues().apply {
+                        put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                        put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf")
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                        }
+                    }
+                    val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv)
+                    if (uri != null) {
+                        resolver.openOutputStream(uri)?.use { it.write(bytes) }
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@MainActivity, "Saved PDF to Downloads: $fileName", Toast.LENGTH_LONG).show()
+                            val openIntent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(uri, "application/pdf")
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            runCatching { startActivity(openIntent) }
+                        }
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@MainActivity, "PDF save failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }
