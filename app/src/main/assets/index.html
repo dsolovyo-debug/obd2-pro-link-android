@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#080c15" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
-  <title>OBD2 Pro Link v3.2 — ICON T10 Deep Diagnostics</title>
+  <title>OBD2 Pro Link v3.3 — ICON T10 Deep Diagnostics</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -171,9 +171,14 @@
               <div id="homeVehicleName" class="text-base font-bold text-white mt-0.5">No Vehicle Connected</div>
               <div id="homeVinDisplay" class="text-xs font-mono text-slate-400 mt-0.5">Connect IOS-Vlink to auto-identify vehicle</div>
             </div>
-            <button id="homePrintReportBtn" type="button" class="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
-              <i data-lucide="printer" class="w-3.5 h-3.5"></i><span>PDF Report</span>
-            </button>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button id="homePrintReportBtn" type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
+                <i data-lucide="file-text" class="w-3.5 h-3.5"></i><span>PDF</span>
+              </button>
+              <button id="homeEmailReportBtn" type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-indigo-600/80 hover:bg-indigo-500 text-white border border-indigo-400/40">
+                <i data-lucide="mail" class="w-3.5 h-3.5"></i><span>Email PDF</span>
+              </button>
+            </div>
           </div>
           <div class="grid grid-cols-3 gap-2 text-center">
             <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-2">
@@ -1085,7 +1090,7 @@
     }
 
 
-    function generateVehicleHealthPdf() {
+    function generateVehicleHealthPdf(mode = 'save') {
       if (!window.jspdf || !window.jspdf.jsPDF) {
         showToast('PDF library still loading — try again in a second.');
         return;
@@ -1307,6 +1312,29 @@
       const safeVin = (state.detectedVin || 'Vehicle').replace(/[^A-Z0-9]/gi, '');
       const dateSlug = new Date().toISOString().slice(0, 10);
       const fileName = `OBD2_Health_Report_${safeVin}_${dateSlug}.pdf`;
+
+      const emailSubject = `Vehicle Health Report — ${vehicleTitle}${state.detectedVin ? ' (' + state.detectedVin + ')' : ''}`;
+      const emailBody = `Attached is the OBD2 Pro Link diagnostic health report for ${vehicleTitle} (VIN: ${vinStr}), generated ${nowStr}.\nSummary: ${dtcCount === 0 ? 'HEALTHY (0 DTCs)' : dtcCount + ' DTC(s) found'} | 12V Bus: ${fmtNum(t.voltage, ' V', 2)}${state.hvBms ? ' | HV Battery SOC: ' + state.hvBms.socPct.toFixed(1) + '%' : ''}.`;
+
+      if (mode === 'email') {
+        if (isAndroidNative() && typeof window.AndroidObd.emailPdfBase64 === 'function') {
+          const dataUri = doc.output('datauristring');
+          const b64 = dataUri.split(',')[1] || '';
+          window.AndroidObd.emailPdfBase64(fileName, b64, emailSubject, emailBody);
+          showToast('Opening email app with PDF attached...');
+        } else {
+          const pdfBlob = doc.output('blob');
+          const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+          if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+            navigator.share({ files: [pdfFile], title: emailSubject, text: emailBody }).catch(() => {});
+          } else {
+            doc.save(fileName);
+            window.location.href = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody + '\n\n(Attach downloaded file: ' + fileName + ')')}`;
+            showToast(`Downloaded ${fileName} & opened email client`);
+          }
+        }
+        return;
+      }
 
       if (isAndroidNative() && typeof window.AndroidObd.savePdfBase64 === 'function') {
         const dataUri = doc.output('datauristring');
@@ -2942,7 +2970,8 @@
 
       document.getElementById('connectBleBtn').addEventListener('click', connectBLE);
       document.getElementById('hwReinitBtn').addEventListener('click', initElmProtocol);
-      document.getElementById('homePrintReportBtn').addEventListener('click', () => generateVehicleHealthPdf());
+      document.getElementById('homePrintReportBtn').addEventListener('click', () => generateVehicleHealthPdf('save'));
+      document.getElementById('homeEmailReportBtn')?.addEventListener('click', () => generateVehicleHealthPdf('email'));
       document.getElementById('runTopologyScanBtn').addEventListener('click', runFullTopologyScan);
       document.getElementById('scanImBtn').addEventListener('click', runImReadinessScan);
       document.getElementById('scanFreezeBtn').addEventListener('click', runFreezeFrameScan);
